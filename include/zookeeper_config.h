@@ -1,13 +1,16 @@
 /**
- * @file   zookeeper_const.h
+ * @file   zookeeper_config.h
  * @author liuyuan <yuan.liu1@renren-inc.com>
- * @date   Tue Aug 27 16:06:56 2013
- *
- * @brief  Branch from zkcpp
+ * @author Zhe Yuan <zhe.yuan@renren-inc.com>
+ * @date   Mon Aug 26 22:30:27 2013
+ * 
+ * @brief  
+ * 
+ * 
  */
-
-#ifndef _XCS_ZK_ZOOKEEPER_CONFIG_H_
-#define _XCS_ZK_ZOOKEEPER_CONFIG_H_
+ 
+#ifndef _CCZK_ZOOKEEPER_CONFIG_H_
+#define _CCZK_ZOOKEEPER_CONFIG_H_
 
 #include <string>
 #include <map>
@@ -15,7 +18,7 @@
 
 #include <gflags/gflags.h>
 
-namespace xcs {
+namespace cczk {
 DECLARE_string(xcs_conf);
 using std::string;
 using std::pair;
@@ -56,7 +59,8 @@ using std::pair;
       (root == conf.root);
     }
   };
-}
+  
+}  // namespace cczk
 
 
 #endif

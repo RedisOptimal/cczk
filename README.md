@@ -1,4 +1,4 @@
 cczk
 ====
 
-Configuration Center with ZooKeeper
+Core Client of ZooKeeper

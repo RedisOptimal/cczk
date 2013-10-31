@@ -1,6 +1,7 @@
 /**
  * @file   logging.h
  * @author liuyuan <yuan.liu1@renren-inc.com>
+ * @author Zhe Yuan <zhe.yuan@renren-inc.com>
  * @date   Mon Aug 26 22:30:27 2013
  * 
  * @brief  
@@ -8,14 +9,14 @@
  * 
  */
 
-#ifndef _XCS_LOGGING_H_
-#define _XCS_LOGGING_H_
+#ifndef _CCZK_LOGGING_H_
+#define _CCZK_LOGGING_H_
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <glog/raw_logging.h>
 
-namespace xcs {
+namespace cczk {
 
 /* Logging with inner mutex  */
 // Debug mode, not present in release build
@@ -42,6 +43,6 @@ static void set_xcs_glog_file(const char* log_name) {
   google::InitGoogleLogging(log_name);
 }
 
-}
+}  // namespace cczk
 
 #endif /* _XCS_LOGGING_H_ */

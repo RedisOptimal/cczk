@@ -7,7 +7,7 @@
 
 #include <logging.h>
 
-namespace xcs {
+namespace cczk {
 //DEFINE_string(xcs_conf, "./zk.conf", "The path of zk.conf");
 
 zookeeper_config::zookeeper_config() {
@@ -130,4 +130,4 @@ void zookeeper_config::remove_auth(string username) {
   } 
 }
 
-}  //namespace xcs
+}  //namespace cczk

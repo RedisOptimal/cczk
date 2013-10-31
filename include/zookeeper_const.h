@@ -1,18 +1,18 @@
 /**
  * @file   zookeeper_const.h
  * @author liuyuan <yuan.liu1@renren-inc.com>
+ * @author Zhe Yuan <zhe.yuan@renren-inc.com>
  * @date   Tue Aug 27 16:06:56 2013
  *
- * @brief  Branch from zkcpp
  */
 
-#ifndef _XCS_ZK_ZOOKEEPER_CONST_H_
-#define _XCS_ZK_ZOOKEEPER_CONST_H_
+#ifndef _CCZK_ZOOKEEPER_CONST_H_
+#define _CCZK_ZOOKEEPER_CONST_H_
 #include <stdint.h>
 
 #include <string>
 
-namespace xcs {
+namespace cczk {
 
 /**
  * ZooKeeper return codes.
@@ -315,6 +315,6 @@ namespace OpCode {
   const std::string toString(OpCode::type code);
 };
 
-}
+} // namespace cczk
 
 #endif

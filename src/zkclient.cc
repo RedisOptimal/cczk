@@ -1,6 +1,6 @@
 #include <zkclient.h>
 
-namespace xcs {
+namespace cczk {
   
   void zkclient::update_auth() {
     if (_zhandle != NULL) {
@@ -50,4 +50,4 @@ namespace xcs {
   
   
   
-}
+}  //namespace cczk
