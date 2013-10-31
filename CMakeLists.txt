@@ -1,0 +1,106 @@
+cmake_minimum_required(VERSION 2.6)
+
+project(zkcc)
+
+IF(NOT CMAKE_BUILD_TYPE)
+  SET(CMAKE_BUILD_TYPE "DEBUG")
+ENDIF()
+
+SET(CXX_FLAGS
+ -g
+ -DVALGRIND
+ -Wall
+ -Wextra
+ # -Werror
+ -Woverloaded-virtual
+ -Wpointer-arith
+ -Wwrite-strings
+ -Wno-unused-value
+ -Wno-unused-variable
+ -Wno-reorder
+ -Wno-unused-parameter
+ -Wno-unused-function
+ -rdynamic
+ -fPIC
+ -D_FILE_OFFSET_BITS=64
+ -DHAVE_STDINT_H
+ -DHAVE_NETINET_IN_H
+ -D__STDC_LIMIT_MACROS
+ )
+
+IF(CMAKE_BUILD_BITS EQUAL 32)
+  LIST(APPEND CXX_FLAGS "-m32")
+ENDIF()
+
+STRING(REPLACE ";" " " CMAKE_CXX_FLAGS "${CXX_FLAGS}")
+
+SET(CMAKE_CXX_COMPILER "g++")
+SET(CMAKE_CXX_FLAGS_DEBUG "-O0 -fprofile-arcs -ftest-coverage")
+SET(CMAKE_CXX_FLAGS_RELEASE "-O2 -finline-limit=1000 -DNDEBUG")
+
+INCLUDE_DIRECTORIES(include/)
+INCLUDE_DIRECTORIES(src/)
+
+# Boost
+FIND_PACKAGE(Boost REQUIRED)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
+
+# add common dependences
+#zookeeper
+FIND_LIBRARY(ZOOKEEPER_LIBRARY NAMES zookeeper_mt
+             PATHS lib/ NO_DEFAULT_PATH)
+IF (NOT ZOOKEEPER_LIBRARY)
+  FIND_LIBRARY(ZOOKEEPER_LIBRARY NAMES zookeeper_mt)
+  IF (NOT ZOOKEEPER_LIBRARY)
+    MESSAGE(FATAL_ERROR "zookeeper not found.")
+  ENDIF(NOT ZOOKEEPER_LIBRARY)
+ENDIF(NOT ZOOKEEPER_LIBRARY)
+#glog
+FIND_LIBRARY(GLOG_LIBRARY NAMES glog
+             PATHS lib/ NO_DEFAULT_PATH)
+IF (NOT GLOG_LIBRARY)
+  FIND_LIBRARY(GLOG_LIBRARY NAMES glog)
+  IF (NOT GLOG_LIBRARY)
+    MESSAGE(FATAL_ERROR "glog not found.")
+  ENDIF(NOT GLOG_LIBRARY)
+ENDIF(NOT GLOG_LIBRARY)
+#glog
+FIND_LIBRARY(GFLAGS_LIBRARY NAMES gflags
+             PATHS lib/ NO_DEFAULT_PATH)
+IF (NOT GLOG_LIBRARY)
+  FIND_LIBRARY(GFLAGS_LIBRARY NAMES gflags)
+  IF (NOT GLOG_LIBRARY)
+    MESSAGE(FATAL_ERROR "gflags not found.")
+  ENDIF(NOT GLOG_LIBRARY)
+ENDIF(NOT GLOG_LIBRARY)
+
+FIND_LIBRARY(GTEST_LIBRARY gtest)
+
+
+FILE(GLOB SRC src/*.cc )
+
+ADD_LIBRARY(zkcc_static STATIC ${SRC})
+ADD_LIBRARY(zkcc_dynamic SHARED ${SRC})
+
+TARGET_LINK_LIBRARIES(zkcc_static ${ZOOKEEPER_LIBRARY} 
+  ${GLOG_LIBRARY} pthread)
+TARGET_LINK_LIBRARIES(zkcc_dynamic ${ZOOKEEPER_LIBRARY}
+  ${GLOG_LIBRARY} pthread)
+
+SET_TARGET_PROPERTIES(zkcc_dynamic PROPERTIES VERSION 1.0 SOVERSION 1)
+SET_TARGET_PROPERTIES(zkcc_dynamic PROPERTIES OUTPUT_NAME zkcc)
+SET_TARGET_PROPERTIES(zkcc_static PROPERTIES OUTPUT_NAME zkcc)
+
+
+##############################For test below###############################
+FILE(GLOB TESTS test/*.cc)
+
+FOREACH (test ${TESTS})
+  STRING(REGEX REPLACE ".*/(.+).cc$" "\\1" fileName ${test} )
+  ADD_EXECUTABLE(${fileName} ${test})  
+  INSTALL(TARGETS ${fileName} RUNTIME DESTINATION bin)
+  TARGET_LINK_LIBRARIES(${fileName} ${ZOOKEEPER_LIBRARY}
+  ${GLOG_LIRBARY} pthread zkcc_static)
+ENDFOREACH (test)
+
