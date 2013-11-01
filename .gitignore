@@ -11,3 +11,9 @@
 *.lai
 *.la
 *.a
+
+#vim temp file
+*~
+
+#build directory
+build/

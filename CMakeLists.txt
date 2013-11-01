@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 
-project(zkcc)
+project(cczk)
 
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE "DEBUG")
@@ -80,17 +80,17 @@ FIND_LIBRARY(GTEST_LIBRARY gtest)
 
 FILE(GLOB SRC src/*.cc )
 
-ADD_LIBRARY(zkcc_static STATIC ${SRC})
-ADD_LIBRARY(zkcc_dynamic SHARED ${SRC})
+ADD_LIBRARY(cczk_static STATIC ${SRC})
+ADD_LIBRARY(cczk_dynamic SHARED ${SRC})
 
-TARGET_LINK_LIBRARIES(zkcc_static ${ZOOKEEPER_LIBRARY} 
+TARGET_LINK_LIBRARIES(cczk_static ${ZOOKEEPER_LIBRARY} 
   ${GLOG_LIBRARY} pthread)
-TARGET_LINK_LIBRARIES(zkcc_dynamic ${ZOOKEEPER_LIBRARY}
+TARGET_LINK_LIBRARIES(cczk_dynamic ${ZOOKEEPER_LIBRARY}
   ${GLOG_LIBRARY} pthread)
 
-SET_TARGET_PROPERTIES(zkcc_dynamic PROPERTIES VERSION 1.0 SOVERSION 1)
-SET_TARGET_PROPERTIES(zkcc_dynamic PROPERTIES OUTPUT_NAME zkcc)
-SET_TARGET_PROPERTIES(zkcc_static PROPERTIES OUTPUT_NAME zkcc)
+SET_TARGET_PROPERTIES(cczk_dynamic PROPERTIES VERSION 1.0 SOVERSION 1)
+SET_TARGET_PROPERTIES(cczk_dynamic PROPERTIES OUTPUT_NAME cczk)
+SET_TARGET_PROPERTIES(cczk_static PROPERTIES OUTPUT_NAME cczk)
 
 
 ##############################For test below###############################
@@ -101,6 +101,6 @@ FOREACH (test ${TESTS})
   ADD_EXECUTABLE(${fileName} ${test})  
   INSTALL(TARGETS ${fileName} RUNTIME DESTINATION bin)
   TARGET_LINK_LIBRARIES(${fileName} ${ZOOKEEPER_LIBRARY}
-  ${GLOG_LIRBARY} pthread zkcc_static)
+  ${GLOG_LIRBARY} pthread cczk_static)
 ENDFOREACH (test)
 
