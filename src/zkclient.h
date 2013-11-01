@@ -22,6 +22,9 @@
 #include <boost/noncopyable.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/concept_check.hpp>
+#include <boost/thread.hpp>
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
 
 #include <zookeeper_config.h>
 #include <zookeeper_const.h>
@@ -34,71 +37,35 @@ namespace cczk {
     zhandle_t *_zhandle;
     boost::mutex _glob_mutex;
     zookeeper_config _config;
+    boost::thread _background_watcher_thread;
+    bool _background_watcher;
     
-    zkclient() {
+    zkclient(): _zhandle(NULL),
+                _background_watcher(true),
+                _background_watcher_thread(boost::bind(&zkclient::watcher_loop, this)) {
       srand(getpid());
-      _zhandle = NULL;
+      
     }
     
     void update_auth();
     zhandle_t* create_connection();
     
     static void init_watcher(zhandle_t *zh, int type, 
-        int state, const char *path,void *watcherCtx) {
-      zkclient *instance = static_cast<zkclient*>(watcherCtx);
-      if (type == WatchEvent::SessionStateChanged) {
-        if (state == SessionState::Expired) {
-          instance->close();
-          while (NULL == instance->create_connection()) {
-            //TO-DO lOG   
-          }
-        } else if (state == SessionState::Connecting) {
-            //TO-DO lOG   
-        }
-      } 
-    }
+        int state, const char *path,void *watcherCtx);
 
     
-    
   public  :
-    static zkclient* Open(const zookeeper_config config) {
-      static zkclient instance;
-      static boost::mutex singleton_mutex;
-      boost::mutex::scoped_lock lock(singleton_mutex);
-      if (config != instance._config) {
-        instance._config = config;
-        if (NULL == instance.create_connection()) {
-          return NULL;
-        }
-        instance.update_auth();
-        return &instance;
-      }
-      if (config == instance._config) {
-        instance._config = config;
-        if (NULL == instance._zhandle) {
-          if (NULL == instance.create_connection()) {
-            return NULL;
-          }
-        }
-        instance.update_auth();
-        return &instance;
-      }
-      return NULL;
-    }
+    static zkclient* Open(const zookeeper_config config);
     
-    void close() {
-      if (_zhandle != NULL) {
-        zookeeper_close(_zhandle);
-      }
-    }
+    void close();
     
-    bool is_avaiable() {
-      if (_zhandle != NULL && zoo_state(_zhandle) == SessionState::Connected) {
-        return true;
-      }
-      return false;
-    }
+    bool is_avaiable();
     
+    void watcher_loop();
+   
+    ReturnCode::type get_children_of_path(string, std::vector<string>&);
+    
+    ReturnCode::type get_data_of_node(string, string&);
     
     
   };

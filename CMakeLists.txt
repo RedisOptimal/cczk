@@ -84,9 +84,9 @@ ADD_LIBRARY(cczk_static STATIC ${SRC})
 ADD_LIBRARY(cczk_dynamic SHARED ${SRC})
 
 TARGET_LINK_LIBRARIES(cczk_static ${ZOOKEEPER_LIBRARY} 
-  ${GLOG_LIBRARY} pthread)
+  ${GLOG_LIBRARY} pthread boost_thread boost_system)
 TARGET_LINK_LIBRARIES(cczk_dynamic ${ZOOKEEPER_LIBRARY}
-  ${GLOG_LIBRARY} pthread)
+  ${GLOG_LIBRARY} pthread boost_thread boost_system)
 
 SET_TARGET_PROPERTIES(cczk_dynamic PROPERTIES VERSION 1.0 SOVERSION 1)
 SET_TARGET_PROPERTIES(cczk_dynamic PROPERTIES OUTPUT_NAME cczk)
@@ -101,6 +101,6 @@ FOREACH (test ${TESTS})
   ADD_EXECUTABLE(${fileName} ${test})  
   INSTALL(TARGETS ${fileName} RUNTIME DESTINATION bin)
   TARGET_LINK_LIBRARIES(${fileName} ${ZOOKEEPER_LIBRARY}
-  ${GLOG_LIRBARY} pthread cczk_static)
+  ${GLOG_LIRBARY} pthread cczk_static boost_thread boost_system)
 ENDFOREACH (test)
 

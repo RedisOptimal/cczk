@@ -9,8 +9,8 @@
  * 
  */
 
-#ifndef _CCZK_ZK_WATHER_H_
-#define _CCZK_ZK_WATHER_H_
+#ifndef _CCZK_ZK_WATCHER_H_
+#define _CCZK_ZK_WATCHER_H_
 #include <string>
 
 #include <boost/noncopyable.hpp>
@@ -21,10 +21,10 @@
 
 namespace cczk {
   using boost::noncopyable;
-  class Wathcer : noncopyable {
+  class wathcer : noncopyable {
   public  :
     typedef boost::function<void(const std::string&, WatchEvent::type)> Listener;
-    explicit Wathcer(Wathcer::Listener &listener) {
+    explicit wathcer(Listener &listener) {
       _live = true;
       _listener = listener;
     }
@@ -37,6 +37,13 @@ namespace cczk {
       return _live;
     }
     
+    void set_listener(Listener &listener) {
+      _listener = listener;
+    }
+    
+    Listener get_listener() {
+      return _listener;
+    }
   private :
     bool _live;
     Listener _listener;
