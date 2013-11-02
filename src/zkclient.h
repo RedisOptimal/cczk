@@ -44,7 +44,6 @@ namespace cczk {
                 _background_watcher(true),
                 _background_watcher_thread(boost::bind(&zkclient::watcher_loop, this)) {
       srand(getpid());
-      
     }
     
     void update_auth();
@@ -55,7 +54,7 @@ namespace cczk {
 
     
   public  :
-    static zkclient* Open(const zookeeper_config config);
+    static zkclient* Open(const zookeeper_config/*config*/);
     
     void close();
     
@@ -63,11 +62,15 @@ namespace cczk {
     
     void watcher_loop();
    
-    ReturnCode::type get_children_of_path(string, std::vector<string>&);
+    ReturnCode::type get_children_of_path(string/*path*/, std::vector<string>&/*children*/);
     
-    ReturnCode::type get_data_of_node(string, string&);
+    ReturnCode::type get_data_of_node(string/*path*/, string&/*data*/);
     
+    ReturnCode::type create_node(string/*path*/, string/*value*/, CreateMode::type/*mode*/);
     
+    ReturnCode::type delete_node(string/*path*/);
+    
+    ReturnCode::type exist(string/*path*/);
   };
   
 }
