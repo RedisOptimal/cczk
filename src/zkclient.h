@@ -39,6 +39,7 @@ namespace cczk {
     zookeeper_config _config;
     boost::thread _background_watcher_thread;
     bool _background_watcher;
+    boost::mutex singleton_mutex;
     
     zkclient(): _zhandle(NULL),
                 _background_watcher(true),
@@ -64,9 +65,11 @@ namespace cczk {
    
     ReturnCode::type get_children_of_path(string/*path*/, std::vector<string>&/*children*/);
     
-    ReturnCode::type get_data_of_node(string/*path*/, string&/*data*/);
+    ReturnCode::type set_data_of_node(string/*path*/, string&/*value*/);
     
-    ReturnCode::type create_node(string/*path*/, string/*value*/, CreateMode::type/*mode*/);
+    ReturnCode::type get_data_of_node(string/*path*/, string&/*value*/);
+    
+    ReturnCode::type create_node(string/*path*/, string&/*value*/, CreateMode::type/*mode*/);
     
     ReturnCode::type delete_node(string/*path*/);
     

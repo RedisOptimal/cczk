@@ -8,7 +8,7 @@
 #include <logging.h>
 
 namespace cczk {
-//DEFINE_string(xcs_conf, "./zk.conf", "The path of zk.conf");
+DEFINE_string(xcs_conf, "./zk.conf", "The path of zk.conf");
 
 zookeeper_config::zookeeper_config() {
   set_host("");
