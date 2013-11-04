@@ -53,6 +53,8 @@ namespace cczk {
     static void init_watcher(zhandle_t *zh, int type, 
         int state, const char *path,void *watcherCtx);
 
+    static void event_watcher(zhandle_t *zh, int type,
+        int state, const char *path,void *watcherCtx);
     
   public  :
     static zkclient* Open(const zookeeper_config/*config*/);

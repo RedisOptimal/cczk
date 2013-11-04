@@ -3,7 +3,7 @@
 #include <zookeeper_const.h>
 #include <zookeeper_config.h>
 #include <zkclient.h>
-#include <watcher.h>
+#include <watcher_factory.h>
 
 int main(int argc, char **argv) {
   cczk::zookeeper_config config("10.3.20.161:21810",3000,"/test");

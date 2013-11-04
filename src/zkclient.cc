@@ -81,7 +81,13 @@ void zkclient::init_watcher(zhandle_t* zh, int type,
     }
   } 
 }
- 
+
+void zkclient::event_watcher(zhandle_t* zh, int type, 
+      int state, const char* path, void* watcherCtx) {
+  
+}
+
+
 zkclient* zkclient::Open(const zookeeper_config config)  {
   static zkclient instance;
   boost::mutex::scoped_lock lock(instance.singleton_mutex);
@@ -168,21 +174,20 @@ ReturnCode::type zkclient::get_data_of_node(string path, string& value) {
     return return_code;
   }
   int length = FLAGS_xcs_zk_node_max_length;
-  char *buffer = new char[FLAGS_xcs_zk_node_max_length];
+  boost::scoped_array<char> buffer(new char[FLAGS_xcs_zk_node_max_length]);
   Stat stat;
   int rc = zoo_get(_zhandle,
                    path.c_str(),
                    0,
-                   buffer,
+                   buffer.get(),
                    &length,
                    &stat);
   if (rc != ZOK || length == -1) {
     value.clear();
     return_code = static_cast<ReturnCode::type>(rc);
   } else {
-    value.assign(buffer, stat.dataLength);
+    value.assign(buffer.get(), stat.dataLength);
   }
-  delete [] buffer;
   return return_code;
 }
  

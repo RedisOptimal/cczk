@@ -21,10 +21,10 @@
 
 namespace cczk {
   using boost::noncopyable;
-  class wathcer : noncopyable {
+  class watcher : noncopyable {
   public  :
     typedef boost::function<void(const std::string&, WatchEvent::type)> Listener;
-    explicit wathcer(Listener &listener) {
+    explicit watcher(Listener &listener) {
       _live = true;
       _listener = listener;
     }
