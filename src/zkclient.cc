@@ -1,5 +1,9 @@
 #include <zkclient.h>
 
+#include <boost/shared_ptr.hpp>
+
+#include <watcher.h>
+
 namespace cczk {
 DEFINE_int32(xcs_zk_node_max_length, 1024*1024, "The default length of zookeeper node's data is 1M.");
 
@@ -84,7 +88,21 @@ void zkclient::init_watcher(zhandle_t* zh, int type,
 
 void zkclient::event_watcher(zhandle_t* zh, int type, 
       int state, const char* path, void* watcherCtx) {
+  boost::shared_ptr<watcher> *point = static_cast<boost::shared_ptr<watcher>* >(watcherCtx);
   
+  //already droped by user
+  
+  //already closed by user 
+  if (!point->get()->is_live()) {
+    return;
+  }
+  //register back to zk
+  
+  
+  //trigger the callback function
+  WatchEvent::type temp_state = static_cast<WatchEvent::type>(state);
+  string temp_path(path);
+  point->get()->get_listener()(temp_path, temp_state);
 }
 
 

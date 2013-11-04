@@ -20,7 +20,7 @@
 #include <zkclient.h>
 
 namespace cczk {
-  class watcher_factory{
+  class watcher_factory {
   public  :
     static boost::shared_ptr<watcher> get_watcher(watcher::Listener &listener) {
       boost::shared_ptr<watcher> instance(new watcher(listener));
