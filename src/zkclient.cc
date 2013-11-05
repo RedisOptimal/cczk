@@ -259,11 +259,39 @@ ReturnCode::type zkclient::create_node(string path, string& data, CreateMode::ty
 }
  
 ReturnCode::type zkclient::delete_node(string path) {
+  boost::mutex::scoped_lock lock(this->singleton_mutex);
+  if (!this->is_avaiable()) {
+    return ReturnCode::Error;
+  }
   int rc = zoo_delete(_zhandle, path.c_str(), -1);
   if (rc != ZOK) {
     return static_cast<ReturnCode::type>(rc);
   }
   return ReturnCode::Ok;
 }
- 
+
+ReturnCode::type zkclient::add_listener(boost::shared_ptr< watcher > listener, string path) {
+  boost::mutex::scoped_lock lock(this->singleton_mutex);
+  if (!this->is_avaiable()) {
+    return ReturnCode::Error;
+  }
+  listener_map::iterator it;
+  //already removed
+  if ((it = _listeners.find(std::make_pair(listener, true))) != _listeners.end()) {
+    return ReturnCode::Error;
+  }
+  //add listener to local data-struct 
+  if ((it = _listeners.find(std::make_pair(listener, false))) != _listeners.end()) {  //already in map
+    it->second.insert(path);
+  } else {  //not in map
+    listener_map_key _key = std::make_pair(listener, false);
+    listener_map_value _value;
+    _value.insert(path);
+    _listeners.insert(std::make_pair(_key, _value));
+  }
+  
+  return ReturnCode::Ok;
+}
+
+
 }  //namespace cczk

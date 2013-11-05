@@ -25,21 +25,29 @@
 #include <boost/thread.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <zookeeper_config.h>
 #include <zookeeper_const.h>
 #include <logging.h>
+#include <watcher.h>
 
 namespace cczk {
   using boost::noncopyable;
   class zkclient : noncopyable {
   private :
+    typedef std::pair<boost::shared_ptr<watcher>, bool> listener_map_key;  // pair<watcher, removed>
+    typedef std::set<string> listener_map_value;  // path of set
+    typedef std::map<listener_map_key, listener_map_value> listener_map;  
+             
     zhandle_t *_zhandle;
     boost::mutex _glob_mutex;
     zookeeper_config _config;
     boost::thread _background_watcher_thread;
     bool _background_watcher;
     boost::mutex singleton_mutex;
+    listener_map _listeners;                
+    std::map<string, string> ephemeral_node;
     
     zkclient(): _zhandle(NULL),
                 _background_watcher(true),
@@ -76,6 +84,12 @@ namespace cczk {
     ReturnCode::type delete_node(string/*path*/);
     
     ReturnCode::type exist(string/*path*/);
+    
+    ReturnCode::type add_listener(boost::shared_ptr<watcher>/*listener*/, string/*path*/);
+   
+    ReturnCode::type drop_listener(boost::shared_ptr<watcher>/*listener*/);
+    
+    ReturnCode::type drop_listener_with_path(boost::shared_ptr<watcher>/*listener*/, string/*path*/);
   };
   
 }
