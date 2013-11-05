@@ -7,7 +7,7 @@
 
 int main(int argc, char **argv) {
   cczk::zookeeper_config config("10.3.20.161:21810",3000,"/test");
-  cczk::zkclient *tmp = cczk::zkclient::Open(config);
+  cczk::zkclient *tmp = cczk::zkclient::Open(&config);
   std::cout << "Hello, world!" << std::endl;
   return 0;
 };

@@ -82,6 +82,8 @@ void zkclient::init_watcher(zhandle_t* zh, int type,
       }
     } else if (state == SessionState::Connecting) {
         //TO-DO log   
+    } else if (state == SessionState::Connected) {
+      
     }
   } 
 }
@@ -89,36 +91,56 @@ void zkclient::init_watcher(zhandle_t* zh, int type,
 void zkclient::event_watcher(zhandle_t* zh, int type, 
       int state, const char* path, void* watcherCtx) {
   boost::shared_ptr<watcher> *point = static_cast<boost::shared_ptr<watcher>* >(watcherCtx);
-  
+  zkclient *instance = zkclient::Open(NULL);
+  string temp_path(path);
   //already droped by user
-  
-  //already closed by user 
-  if (!point->get()->is_live()) {
+  listener_map::iterator it;
+  //check wather in listener
+  if ((it = instance->_listeners.find(*point)) == instance->_listeners.end()) {  
+    //TO-DO log bug
     return;
   }
-  //register back to zk
   
+  listener_map_value::iterator jt;
+  if (!it->first->is_live()) {  //watcher die
+    if ((jt = it->second.find(temp_path)) != it->second.end()) {  //watcher die and remove path
+      it->second.erase(jt);
+      if (it->second.size() == 0) {
+        instance->_listeners.erase(it);
+      }
+    }
+    return;
+  } else {  //watcher live
+    if ((jt = it->second.find(temp_path)) == it->second.end()) {  //watcher path droped
+      return;
+    }
+  }
+  
+  //register back to zk
+  instance->add_listener(*point, temp_path);
   
   //trigger the callback function
   WatchEvent::type temp_state = static_cast<WatchEvent::type>(state);
-  string temp_path(path);
   point->get()->get_listener()(temp_path, temp_state);
 }
 
 
-zkclient* zkclient::Open(const zookeeper_config config)  {
+zkclient* zkclient::Open(const zookeeper_config *config)  {
   static zkclient instance;
   boost::mutex::scoped_lock lock(instance.singleton_mutex);
-  if (config != instance._config) {
-    instance._config = config;
+  if (config == NULL) {
+    return &instance;
+  }
+  if (*config != instance._config) {
+    instance._config = *config;
     if (NULL == instance.create_connection()) {
       return NULL;
     }
     instance.update_auth();
     return &instance;
   }
-  if (config == instance._config) {
-    instance._config = config;
+  if (*config == instance._config) {
+    instance._config = *config;
     if (NULL == instance._zhandle) {
       if (NULL == instance.create_connection()) {
         return NULL;
@@ -268,23 +290,72 @@ ReturnCode::type zkclient::add_listener(boost::shared_ptr< watcher > listener, s
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
-  listener_map::iterator it;
-  //already removed
-  if ((it = _listeners.find(std::make_pair(listener, true))) != _listeners.end()) {
-    return ReturnCode::Error;
+  ReturnCode::type return_code;
+  if ((return_code = exist(path)) != ReturnCode::Ok) {
+    return return_code;
   }
+  listener_map::iterator it;
   //add listener to local data-struct 
-  if ((it = _listeners.find(std::make_pair(listener, false))) != _listeners.end()) {  //already in map
-    it->second.insert(path);
+  if ((it = _listeners.find(listener)) != _listeners.end()) {  //already in map
+    if (!it->first->is_live()) {  //removed in past
+      return ReturnCode::Error;
+    } else {
+      it->second.insert(path);
+    }
   } else {  //not in map
-    listener_map_key _key = std::make_pair(listener, false);
+    listener_map_key _key = listener;
     listener_map_value _value;
     _value.insert(path);
     _listeners.insert(std::make_pair(_key, _value));
   }
-  
-  return ReturnCode::Ok;
+  Stat stat;
+  int rc = zoo_wexists(_zhandle,
+                       path.c_str(),
+                       zkclient::event_watcher,
+                       static_cast<void*>(&listener),
+                       &stat);
+  if (rc != ZOK) {
+    //TO-DO log
+    return_code = static_cast<ReturnCode::type>(rc);
+  }
+  return return_code;
 }
 
+ReturnCode::type zkclient::drop_listener_with_path(boost::shared_ptr< watcher > listener, string path) {
+  if (!this->is_avaiable()) {
+    return ReturnCode::Error;
+  }
+  listener_map::iterator it;
+  if ((it = _listeners.find(listener)) != _listeners.end()) {
+    listener_map_value::iterator jt;
+    if ((jt = it->second.find(path)) != it->second.end()) {
+      it->second.erase(jt); 
+    }
+    return ReturnCode::Ok;
+  } else {
+    return ReturnCode::Error;
+  }
+  // never go here
+  return ReturnCode::Error;
+}
+
+ReturnCode::type zkclient::drop_listener(boost::shared_ptr< watcher > listener) {
+  if (!this->is_avaiable()) {
+    return ReturnCode::Error;
+  }
+  listener_map::iterator it;
+  if ((it = _listeners.find(listener)) != _listeners.end()) {  //already in map
+    if (!it->first->is_live()) {  //removed in past
+      return ReturnCode::Ok;
+    } else {
+      it->first->close();
+      return ReturnCode::Ok;
+    }
+  } else {  //not in map
+    return ReturnCode::Error;
+  }
+  // never go here
+  return ReturnCode::Error;
+}
 
 }  //namespace cczk

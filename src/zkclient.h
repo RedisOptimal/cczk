@@ -9,8 +9,8 @@
  * 
  */
  
-#ifndef _CCZ_ZKCLIENT_H_
-#define _CCZ_ZKCLIENT_H_
+#ifndef _CCZK_ZKCLIENT_H_
+#define _CCZK_ZKCLIENT_H_
 
 #include <map>
 #include <set>
@@ -34,9 +34,10 @@
 
 namespace cczk {
   using boost::noncopyable;
+  class watcher;
   class zkclient : noncopyable {
   private :
-    typedef std::pair<boost::shared_ptr<watcher>, bool> listener_map_key;  // pair<watcher, removed>
+    typedef boost::shared_ptr<watcher> listener_map_key;  // watcher
     typedef std::set<string> listener_map_value;  // path of set
     typedef std::map<listener_map_key, listener_map_value> listener_map;  
              
@@ -45,9 +46,9 @@ namespace cczk {
     zookeeper_config _config;
     boost::thread _background_watcher_thread;
     bool _background_watcher;
-    boost::mutex singleton_mutex;
     listener_map _listeners;                
-    std::map<string, string> ephemeral_node;
+    std::map<string, string> _ephemeral_node;
+    boost::mutex singleton_mutex;
     
     zkclient(): _zhandle(NULL),
                 _background_watcher(true),
@@ -65,7 +66,7 @@ namespace cczk {
         int state, const char *path,void *watcherCtx);
     
   public  :
-    static zkclient* Open(const zookeeper_config/*config*/);
+    static zkclient* Open(const zookeeper_config*/*config*/);
     
     void close();
     
