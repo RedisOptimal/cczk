@@ -131,7 +131,6 @@ zkclient* zkclient::Open(const zookeeper_config config)  {
 }
  
 ReturnCode::type zkclient::get_children_of_path(string path, std::vector< string >& children) {
-  boost::mutex::scoped_lock lock(this->singleton_mutex);
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
@@ -157,7 +156,6 @@ ReturnCode::type zkclient::get_children_of_path(string path, std::vector< string
 }
 
 ReturnCode::type zkclient::set_data_of_node(string path, string& value) {
-  boost::mutex::scoped_lock lock(this->singleton_mutex);
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
@@ -182,7 +180,6 @@ ReturnCode::type zkclient::set_data_of_node(string path, string& value) {
 
 
 ReturnCode::type zkclient::get_data_of_node(string path, string& value) {
-  boost::mutex::scoped_lock lock(this->singleton_mutex);
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
@@ -210,7 +207,6 @@ ReturnCode::type zkclient::get_data_of_node(string path, string& value) {
 }
  
 ReturnCode::type zkclient::exist(string path) {
-  boost::mutex::scoped_lock lock(this->singleton_mutex);
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
@@ -223,7 +219,6 @@ ReturnCode::type zkclient::exist(string path) {
 }
  
 ReturnCode::type zkclient::create_node(string path, string& data, CreateMode::type mode) {
-  boost::mutex::scoped_lock lock(this->singleton_mutex);
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
@@ -259,7 +254,6 @@ ReturnCode::type zkclient::create_node(string path, string& data, CreateMode::ty
 }
  
 ReturnCode::type zkclient::delete_node(string path) {
-  boost::mutex::scoped_lock lock(this->singleton_mutex);
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
@@ -271,7 +265,6 @@ ReturnCode::type zkclient::delete_node(string path) {
 }
 
 ReturnCode::type zkclient::add_listener(boost::shared_ptr< watcher > listener, string path) {
-  boost::mutex::scoped_lock lock(this->singleton_mutex);
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
