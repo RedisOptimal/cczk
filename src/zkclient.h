@@ -46,15 +46,12 @@ namespace cczk {
     zookeeper_config _config;
     boost::thread _background_watcher_thread;
     bool _background_watcher;
+    boost::mutex background_mutex;
     listener_map _listeners;                
     std::map<string, string> _ephemeral_node;
     boost::mutex singleton_mutex;
     
-    zkclient(): _zhandle(NULL),
-                _background_watcher(true),
-                _background_watcher_thread(boost::bind(&zkclient::watcher_loop, this)) {
-      srand(getpid());
-    }
+    zkclient();
     
     void update_auth();
     zhandle_t* create_connection();
@@ -65,14 +62,18 @@ namespace cczk {
     static void event_watcher(zhandle_t *zh, int type,
         int state, const char *path,void *watcherCtx);
     
+    void watcher_loop();
+    
+    ~zkclient();
+    
   public  :
     static zkclient* Open(const zookeeper_config*/*config*/);
     
     void close();
     
-    bool is_avaiable();
+    void clear();
     
-    void watcher_loop();
+    bool is_avaiable();
    
     ReturnCode::type get_children_of_path(string/*path*/, std::vector<string>&/*children*/);
     

@@ -5,8 +5,16 @@
 #include <watcher.h>
 
 namespace cczk {
-DEFINE_int32(xcs_zk_node_max_length, 1024*1024, "The default length of zookeeper node's data is 1M.");
+DEFINE_int32(xcs_zk_node_max_length, 1024*1024, "Default length limitation of zookeeper node's data is 1M.");
+DEFINE_int32(refresh_timeval, 300, "Default refresh timeval.");
 
+zkclient::zkclient(): _zhandle(NULL),
+            _background_watcher(true),
+            _background_watcher_thread(boost::bind(&zkclient::watcher_loop, this)) {
+  srand(getpid());
+  clear();
+}
+    
 void zkclient::update_auth() {
   if (_zhandle != NULL) {
     const string scheme = "digest";
@@ -53,8 +61,50 @@ zhandle_t* zkclient::create_connection() {
 }
 
 void zkclient::watcher_loop() {
- 
+  while (_background_watcher) {
+    sleep(FLAGS_refresh_timeval);
+    {
+      boost::mutex::scoped_lock lock(background_mutex);
+      listener_map::iterator it;
+      for (it = _listeners.begin(); it != _listeners.end(); ++it) {
+        listener_map_key _key = it->first;
+        listener_map_value _value = it->second;
+        if (_key->is_live()) {
+          listener_map_value::iterator jt;
+          for (jt = _value.begin();jt != _value.end(); ++jt) {
+            //because of background_mutex, do not use add_listener()
+            Stat stat;
+            int rc = zoo_wexists(_zhandle,
+                                jt->c_str(),
+                                zkclient::event_watcher,
+                                static_cast<void*>(&_key),
+                                &stat);
+            if (rc != ZOK) {
+              //TO-DO log
+            }
+          }
+        }
+      }
+      //TO-DO ephemeral ndoe
+    } while (0);
+  }
 }
+ 
+void zkclient::clear() {
+  listener_map::iterator it;
+  for (it = _listeners.begin();it != _listeners.end(); ++it) {
+    it->first->close();
+  }
+  //TO-DO ephemeral ndoe
+}
+
+ 
+zkclient::~zkclient() {
+  _background_watcher = false;
+  _background_watcher_thread.join();
+  zookeeper_close(_zhandle);
+}
+
  
 bool zkclient::is_avaiable()  {
   boost::mutex::scoped_lock lock(this->singleton_mutex);
@@ -83,7 +133,7 @@ void zkclient::init_watcher(zhandle_t* zh, int type,
     } else if (state == SessionState::Connecting) {
         //TO-DO log   
     } else if (state == SessionState::Connected) {
-      
+        //TO-DO log
     }
   } 
 }
@@ -105,7 +155,7 @@ void zkclient::event_watcher(zhandle_t* zh, int type,
   if (!it->first->is_live()) {  //watcher die
     if ((jt = it->second.find(temp_path)) != it->second.end()) {  //watcher die and remove path
       it->second.erase(jt);
-      if (it->second.size() == 0) {
+      if (it->second.empty()) {
         instance->_listeners.erase(it);
       }
     }
@@ -248,6 +298,7 @@ ReturnCode::type zkclient::create_node(string path, string& data, CreateMode::ty
     return ReturnCode::Error;
   }
   
+  //TO-DO ephemeral ndoe
   int rc;
   if (data.length() == 0) {
     rc = zoo_create(_zhandle,
@@ -294,6 +345,7 @@ ReturnCode::type zkclient::add_listener(boost::shared_ptr< watcher > listener, s
   if ((return_code = exist(path)) != ReturnCode::Ok) {
     return return_code;
   }
+  boost::mutex::scoped_lock lock(background_mutex);
   listener_map::iterator it;
   //add listener to local data-struct 
   if ((it = _listeners.find(listener)) != _listeners.end()) {  //already in map
@@ -325,6 +377,7 @@ ReturnCode::type zkclient::drop_listener_with_path(boost::shared_ptr< watcher > 
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
+  boost::mutex::scoped_lock lock(background_mutex);
   listener_map::iterator it;
   if ((it = _listeners.find(listener)) != _listeners.end()) {
     listener_map_value::iterator jt;
@@ -343,6 +396,7 @@ ReturnCode::type zkclient::drop_listener(boost::shared_ptr< watcher > listener) 
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
+  boost::mutex::scoped_lock lock(background_mutex);
   listener_map::iterator it;
   if ((it = _listeners.find(listener)) != _listeners.end()) {  //already in map
     if (!it->first->is_live()) {  //removed in past
