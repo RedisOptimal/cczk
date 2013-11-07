@@ -39,6 +39,7 @@ void zkclient::update_auth() {
 zhandle_t* zkclient::create_connection() {
   if (_zhandle != NULL) {
     zookeeper_close(_zhandle);
+    _zhandle = NULL; 
   }
   sleep(rand() % 10);
   _zhandle = zookeeper_init((_config.get_host()+"/"+_config.get_root()).c_str(),
@@ -52,6 +53,7 @@ zhandle_t* zkclient::create_connection() {
     usleep(sleep_interval);
     if (sleep_interval > _config.get_session_timeout()) {
       zookeeper_close(_zhandle);
+     _zhandle = NULL; 
       break;
     }
     sleep_interval <= 1;
@@ -103,6 +105,7 @@ zkclient::~zkclient() {
   _background_watcher = false;
   _background_watcher_thread.join();
   zookeeper_close(_zhandle);
+  _zhandle = NULL; 
 }
 
  
@@ -118,6 +121,7 @@ void zkclient::close() {
   boost::mutex::scoped_lock lock(this->singleton_mutex);
   if (_zhandle != NULL) {
     zookeeper_close(_zhandle);
+    _zhandle = NULL; 
   }
 }
 
