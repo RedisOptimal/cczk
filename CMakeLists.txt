@@ -92,7 +92,7 @@ SET_TARGET_PROPERTIES(cczk_static PROPERTIES OUTPUT_NAME cczk)
 
 ##############################For test below###############################
 IF (${CMAKE_BUILD_TYPE} MATCHES "DEBUG")
-
+  FIND_PACKAGE(GTest REQUIRED)
   FIND_LIBRARY(GTEST_LIBRARY NAMES gtest
               PATHS lib/ NO_DEFAULT_PATH)
   IF (NOT GTEST_LIBRARY)
