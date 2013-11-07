@@ -145,7 +145,7 @@ void zkclient::init_watcher(zhandle_t* zh, int type,
 void zkclient::event_watcher(zhandle_t* zh, int type, 
       int state, const char* path, void* watcherCtx) {
   boost::shared_ptr<watcher> *point = static_cast<boost::shared_ptr<watcher>* >(watcherCtx);
-  zkclient *instance = zkclient::Open(NULL);
+  zkclient *instance = zkclient::open(NULL);
   string temp_path(path);
   //already droped by user
   listener_map::iterator it;
@@ -179,7 +179,7 @@ void zkclient::event_watcher(zhandle_t* zh, int type,
 }
 
 
-zkclient* zkclient::Open(const zookeeper_config *config)  {
+zkclient* zkclient::open(const zookeeper_config *config)  {
   static zkclient instance;
   boost::mutex::scoped_lock lock(instance.singleton_mutex);
   if (config == NULL) {

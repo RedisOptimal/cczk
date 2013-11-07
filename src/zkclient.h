@@ -48,7 +48,7 @@ namespace cczk {
     bool _background_watcher;
     boost::mutex background_mutex;
     listener_map _listeners;                
-    std::map<string, string> _ephemeral_node;
+    std::map<string, std::pair<string, CreateMode::type> > _ephemeral_node;
     boost::mutex singleton_mutex;
     
     zkclient();
@@ -67,7 +67,7 @@ namespace cczk {
     ~zkclient();
     
   public  :
-    static zkclient* Open(const zookeeper_config*/*config*/);
+    static zkclient* open(const zookeeper_config*/*config*/);
     
     void close();
     
