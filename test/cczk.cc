@@ -1,14 +1,13 @@
-#include <iostream>
-#include <boost/noncopyable.hpp>
-#include <zookeeper_const.h>
-#include <zookeeper_config.h>
-#include <zkclient.h>
-#include <watcher_factory.h>
+#include <gtest/gtest.h>
+#include <logging.h>
 
 int main(int argc, char **argv) {
-  cczk::zookeeper_config config("10.3.20.161:21810",3000,"/test");
-  cczk::zkclient *tmp = cczk::zkclient::Open(&config);
-  std::cout << "Hello, world!" << std::endl;
-  return 0;
+  using namespace cczk;
+  testing::InitGoogleTest(&argc, argv);
+  google::ParseCommandLineFlags(&argc, &argv, true);
+  
+  cczk::set_xcs_glog_file(argv[0]);
+  
+  return RUN_ALL_TESTS();
 };
 

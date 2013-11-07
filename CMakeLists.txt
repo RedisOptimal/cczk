@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 project(cczk)
 
@@ -75,15 +75,6 @@ IF (NOT GFLAGS_LIBRARY)
   ENDIF(NOT GFLAGS_LIBRARY)
 ENDIF(NOT GFLAGS_LIBRARY)
 
-FIND_LIBRARY(GTEST_LIBRARY NAMES gtest
-             PATHS lib/ NO_DEFAULT_PATH)
-IF (NOT GTEST_LIBRARY)
-  FIND_LIBRARY(GTEST_LIBRARY NAMES gtest)
-  IF (NOT GTEST_LIBRARY)
-    MESSAGE(FATAL_ERROR "gtest not found.")
-  ENDIF(NOT GTEST_LIBRARY)
-ENDIF(NOT GTEST_LIBRARY)
-
 FILE(GLOB SRC src/*.cc )
 
 ADD_LIBRARY(cczk_static STATIC ${SRC})
@@ -100,13 +91,34 @@ SET_TARGET_PROPERTIES(cczk_static PROPERTIES OUTPUT_NAME cczk)
 
 
 ##############################For test below###############################
-FILE(GLOB TESTS test/*.cc)
+IF (${CMAKE_BUILD_TYPE} MATCHES "DEBUG")
 
-FOREACH (test ${TESTS})
-  STRING(REGEX REPLACE ".*/(.+).cc$" "\\1" fileName ${test} )
-  ADD_EXECUTABLE(${fileName} ${test})  
-  INSTALL(TARGETS ${fileName} RUNTIME DESTINATION bin)
-  TARGET_LINK_LIBRARIES(${fileName} ${ZOOKEEPER_LIBRARY}
-  ${GLOG_LIRBARY} ${GFLAGS_LIBRARY} ${GTEST_LIBRARY} pthread cczk_static boost_thread boost_system)
-ENDFOREACH (test)
+  FIND_LIBRARY(GTEST_LIBRARY NAMES gtest
+              PATHS lib/ NO_DEFAULT_PATH)
+  IF (NOT GTEST_LIBRARY)
+    FIND_LIBRARY(GTEST_LIBRARY NAMES gtest)
+    IF (NOT GTEST_LIBRARY)
+      MESSAGE(FATAL_ERROR "gtest not found.")
+    ENDIF(NOT GTEST_LIBRARY)
+  ENDIF(NOT GTEST_LIBRARY)
 
+  INCLUDE(CTest)
+  INCLUDE(Dart)
+  ENABLE_TESTING()
+  FILE(GLOB TESTS test/*.cc)
+  ## Unit test start here
+  SET(TestArgs "--log_dir=." "--zookeeper_log_name=zookeeper.log")
+  ADD_EXECUTABLE(cczk_test ${TESTS})
+  TARGET_LINK_LIBRARIES(cczk_test cczk_static)
+  
+  GTEST_ADD_TESTS(cczk_test "${TestArgs}" ${TESTS})
+  SET(CTEST_MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --quiet --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=100 --verbose --demangle=yes")
+
+#  FOREACH (test ${TESTS})
+#    STRING(REGEX REPLACE ".*/(.+).cc$" "\\1" fileName ${test} )
+#    ADD_EXECUTABLE(${fileName} ${test})  
+#    INSTALL(TARGETS ${fileName} RUNTIME DESTINATION bin)
+#    TARGET_LINK_LIBRARIES(${fileName} ${ZOOKEEPER_LIBRARY}
+#    ${GLOG_LIRBARY} ${GFLAGS_LIBRARY} ${GTEST_LIBRARY} pthread cczk_static boost_thread boost_system)
+#  ENDFOREACH (test)
+ENDIF (${CMAKE_BUILD_TYPE} MATCHES "DEBUG")
