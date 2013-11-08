@@ -56,7 +56,7 @@ zhandle_t* zkclient::create_connection() {
      _zhandle = NULL; 
       break;
     }
-    sleep_interval <= 1;
+    sleep_interval <<= 1;
   }
   
   return _zhandle;
