@@ -5,7 +5,7 @@
 
 TEST(ZKCLIENT, OPEN) {
   using namespace cczk;
-  zookeeper_config config("10.11.21.185:21810", 3000, "/test");
+  zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
   ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->is_avaiable());
@@ -14,7 +14,7 @@ TEST(ZKCLIENT, OPEN) {
   tmp = zkclient::open(&config);
   ASSERT_TRUE(tmp == NULL);
   
-  config.set_host("10.11.21.185:21810");
+  config.set_host("localhost:2181");
   config.set_root("");
   tmp = zkclient::open(&config);
   ASSERT_TRUE(tmp != NULL);

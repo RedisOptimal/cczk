@@ -1,5 +1,8 @@
 #include <zkclient.h>
 
+#include <stdio.h>
+#include <errno.h>
+
 #include <boost/shared_ptr.hpp>
 
 #include <watcher.h>
@@ -42,23 +45,27 @@ zhandle_t* zkclient::create_connection() {
     _zhandle = NULL; 
   }
   sleep(rand() % 10);
+  FILE *zk_log = fopen("zookeeper.out","w");
+  zoo_set_log_stream(zk_log);
   _zhandle = zookeeper_init((_config.get_host()+"/"+_config.get_root()).c_str(),
                             zkclient::init_watcher,
-                            3000,
+                            _config.get_session_timeout(),
                             NULL,
                             static_cast<void*>(this),
                             0);
+  if (_zhandle == NULL) {
+    return _zhandle;
+  }
   int sleep_interval = 1;
   while (zoo_state(_zhandle) != ZOO_CONNECTED_STATE) {
-    usleep(sleep_interval);
-    if (sleep_interval > _config.get_session_timeout()) {
+    sleep(sleep_interval);
+    if (sleep_interval > _config.get_session_timeout()/1000) {
       zookeeper_close(_zhandle);
      _zhandle = NULL; 
       break;
     }
     sleep_interval <<= 1;
   }
-  
   return _zhandle;
 }
 
@@ -66,6 +73,7 @@ void zkclient::watcher_loop() {
   while (_background_watcher) {
     sleep(FLAGS_refresh_timeval);
     {
+      if (!is_avaiable()) continue;
       boost::mutex::scoped_lock lock(background_mutex);
       listener_map::iterator it;
       for (it = _listeners.begin(); it != _listeners.end(); ++it) {
@@ -88,7 +96,7 @@ void zkclient::watcher_loop() {
         }
       }
       //TO-DO ephemeral ndoe
-    } while (0);
+    }
   }
 }
  
@@ -111,7 +119,8 @@ zkclient::~zkclient() {
  
 bool zkclient::is_avaiable()  {
   boost::mutex::scoped_lock lock(this->singleton_mutex);
-  if (_zhandle != NULL && zoo_state(_zhandle) == SessionState::Connected) {
+  if (_zhandle != NULL && 
+    static_cast<SessionState::type>(zoo_state(_zhandle)) == SessionState::Connected) {
     return true;
   }
   return false;
