@@ -35,7 +35,7 @@ using std::pair;
     explicit zookeeper_config(const string,const int,const string);
     explicit zookeeper_config();
     
-    void load_xcs_conf_file(const string file_path = FLAGS_xcs_conf);
+    void load_from_file(const string file_path = FLAGS_xcs_conf);
     
     string get_host();
     void set_host(const string);

@@ -40,7 +40,7 @@ static string Trim(string str) {
   else  return str.substr(i, j - i + 1);
 }
 
-void zookeeper_config::load_xcs_conf_file(const string file_path) {
+void zookeeper_config::load_from_file(const string file_path) {
   std::ifstream cfg(file_path.c_str());
   if (!cfg.is_open()) {
     XCS_FATAL << "XCS: Failed to open property configure file:"
