@@ -109,9 +109,9 @@ IF (${CMAKE_BUILD_TYPE} MATCHES "DEBUG")
   ## Unit test start here
   SET(TestArgs "--log_dir=." "--zookeeper_log_name=zookeeper.log")
   ADD_EXECUTABLE(cczk_test ${TESTS})
-  TARGET_LINK_LIBRARIES(cczk_test cczk_static)
+  TARGET_LINK_LIBRARIES(cczk_test cczk_static ${GTEST_LIBRARY})
   
-  GTEST_ADD_TESTS(cczk_test "${TestArgs}" ${TESTS})
+  GTEST_ADD_TESTS(cczk_test "" ${TESTS})
   SET(CTEST_MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --quiet --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=100 --verbose --demangle=yes")
 
 #  FOREACH (test ${TESTS})
