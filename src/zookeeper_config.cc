@@ -67,6 +67,10 @@ void zookeeper_config::load_from_file(const string file_path) {
   if (it != props.end()) {
     set_host(it->second);
   }
+  it = props.find("session_timeout");
+  if (it != props.end()) {
+    set_session_timeout(atoi(it->second.c_str()));
+  }
   it = props.find("auth");
   if (it != props.end()) {
     string auth_str = it->second;
@@ -83,7 +87,7 @@ void zookeeper_config::load_from_file(const string file_path) {
       
       pos = one_auth.find(":");
       if (pos != string::npos) {
-        auth_pair = std::make_pair(one_auth.substr(0, pos), \
+        auth_pair = std::make_pair(one_auth.substr(0, pos), 
                                    one_auth.substr(pos + 1));
         if (!auth_pair.first.empty() && !auth_pair.second.empty()) {
           add_auth(auth_pair);
