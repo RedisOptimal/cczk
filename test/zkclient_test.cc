@@ -19,6 +19,7 @@ TEST(ZKCLIENT, OPEN) {
   tmp = zkclient::open(&config);
   ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->is_avaiable());
+  tmp->close();
 }
 
 TEST(ZKCLIENT, CLOSE) {
