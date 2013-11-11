@@ -50,10 +50,10 @@ void zookeeper_config::load_from_file(const string file_path) {
   std::map<string, string> props;
   while (getline(cfg, cfg_line)) {
     if (cfg_line.size() < 1 || cfg_line[0] == '#')
-      break;
+      continue;
     int index = cfg_line.find("=");
     if (index == -1)
-      break;
+      continue;
     string key = cfg_line.substr(0, index);
     string value = cfg_line.substr(index + 1);
     props.insert(std::pair<string, string>(Trim(key), Trim(value)));
