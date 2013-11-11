@@ -9,7 +9,7 @@
 
 namespace cczk {
 DEFINE_int32(xcs_zk_node_max_length, 1024*1024, "Default length limitation of zookeeper node's data is 1M.");
-DEFINE_int32(refresh_timeval, 300, "Default refresh timeval.");
+DEFINE_int32(refresh_timeval, 10, "Default refresh timeval.");
 
 zkclient::zkclient(): _zhandle(NULL),
             _background_watcher(true),
@@ -44,7 +44,9 @@ zhandle_t* zkclient::create_connection() {
     zookeeper_close(_zhandle);
     _zhandle = NULL; 
   }
+#ifndef DEBUG
   sleep(rand() % 10);
+#endif
   FILE *zk_log = fopen("zookeeper.out","w");
   zoo_set_log_stream(zk_log);
   _zhandle = zookeeper_init((_config.get_host()+"/"+_config.get_root()).c_str(),
