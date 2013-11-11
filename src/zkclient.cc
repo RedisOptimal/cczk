@@ -95,17 +95,24 @@ void zkclient::watcher_loop() {
           }
         }
       }
-      //TO-DO ephemeral ndoe
+      //TO-DO ephemeral node
+      
+      std::map<string ,pair<string, CreateMode::type> >::iterator jt;
+      for (jt = _ephemeral_node.begin();jt != _ephemeral_node.end(); ++jt) {
+        create_node(jt->first, jt->second.first, jt->second.second);
+      }
     }
   }
 }
  
 void zkclient::clear() {
+  boost::mutex::scoped_lock lock(background_mutex);
   listener_map::iterator it;
   for (it = _listeners.begin();it != _listeners.end(); ++it) {
     it->first->close();
   }
   //TO-DO ephemeral ndoe
+  _ephemeral_node.clear();
 }
 
  
@@ -215,7 +222,7 @@ zkclient* zkclient::open(const zookeeper_config *config)  {
   return NULL;
 }
  
-ReturnCode::type zkclient::get_children_of_path(string path, std::vector< string >& children) {
+ReturnCode::type zkclient::get_children_of_path(const string path, std::vector< string >& children) {
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
@@ -240,7 +247,7 @@ ReturnCode::type zkclient::get_children_of_path(string path, std::vector< string
   return return_code;
 }
 
-ReturnCode::type zkclient::set_data_of_node(string path, string& value) {
+ReturnCode::type zkclient::set_data_of_node(const string path, string& value) {
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
@@ -264,7 +271,7 @@ ReturnCode::type zkclient::set_data_of_node(string path, string& value) {
 }
 
 
-ReturnCode::type zkclient::get_data_of_node(string path, string& value) {
+ReturnCode::type zkclient::get_data_of_node(const string path, string& value) {
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
@@ -291,7 +298,7 @@ ReturnCode::type zkclient::get_data_of_node(string path, string& value) {
   return return_code;
 }
  
-ReturnCode::type zkclient::exist(string path) {
+ReturnCode::type zkclient::exist(const string path) {
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
@@ -303,7 +310,7 @@ ReturnCode::type zkclient::exist(string path) {
   return ReturnCode::Ok;
 }
  
-ReturnCode::type zkclient::create_node(string path, string& data, CreateMode::type mode) {
+ReturnCode::type zkclient::create_node(const string path, string& data, CreateMode::type mode) {
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
@@ -336,13 +343,17 @@ ReturnCode::type zkclient::create_node(string path, string& data, CreateMode::ty
     //TO-DO log
     return static_cast<ReturnCode::type>(rc);
   }
+  if (mode == CreateMode::Ephemeral) { 
+    _ephemeral_node.insert(std::make_pair(path, std::make_pair(data, mode)));
+  }
   return ReturnCode::Ok;
 }
  
-ReturnCode::type zkclient::delete_node(string path) {
+ReturnCode::type zkclient::delete_node(const string path) {
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
+  _ephemeral_node.erase(path);
   int rc = zoo_delete(_zhandle, path.c_str(), -1);
   if (rc != ZOK) {
     return static_cast<ReturnCode::type>(rc);

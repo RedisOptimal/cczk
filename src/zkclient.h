@@ -75,17 +75,17 @@ namespace cczk {
     
     bool is_avaiable();
    
-    ReturnCode::type get_children_of_path(string/*path*/, std::vector<string>&/*children*/);
+    ReturnCode::type get_children_of_path(const string/*path*/, std::vector<string>&/*children*/);
     
-    ReturnCode::type set_data_of_node(string/*path*/, string&/*value*/);
+    ReturnCode::type set_data_of_node(const string/*path*/, string&/*value*/);
     
-    ReturnCode::type get_data_of_node(string/*path*/, string&/*value*/);
+    ReturnCode::type get_data_of_node(const string/*path*/, string&/*value*/);
     
-    ReturnCode::type create_node(string/*path*/, string&/*value*/, CreateMode::type/*mode*/);
+    ReturnCode::type create_node(const string/*path*/, string&/*value*/, CreateMode::type/*mode*/);
     
-    ReturnCode::type delete_node(string/*path*/);
+    ReturnCode::type delete_node(const string/*path*/);
     
-    ReturnCode::type exist(string/*path*/);
+    ReturnCode::type exist(const string/*path*/);
     
     ReturnCode::type add_listener(boost::shared_ptr<watcher>/*listener*/, string/*path*/);
    
