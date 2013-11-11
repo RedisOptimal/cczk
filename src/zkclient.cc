@@ -95,8 +95,6 @@ void zkclient::watcher_loop() {
           }
         }
       }
-      //TO-DO ephemeral node
-      
       std::map<string ,pair<string, CreateMode::type> >::iterator jt;
       for (jt = _ephemeral_node.begin();jt != _ephemeral_node.end(); ++jt) {
         create_node(jt->first, jt->second.first, jt->second.second);
@@ -111,7 +109,6 @@ void zkclient::clear() {
   for (it = _listeners.begin();it != _listeners.end(); ++it) {
     it->first->close();
   }
-  //TO-DO ephemeral ndoe
   _ephemeral_node.clear();
 }
 
@@ -318,7 +315,6 @@ ReturnCode::type zkclient::create_node(const string path, string& data, CreateMo
     return ReturnCode::Error;
   }
   
-  //TO-DO ephemeral ndoe
   int rc;
   if (data.length() == 0) {
     rc = zoo_create(_zhandle,
