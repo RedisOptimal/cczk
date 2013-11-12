@@ -65,7 +65,31 @@ TEST(ZKCLIENT, GET_CHILDREN_OF_PATH) {
   ASSERT_NE(tmp, NULL);
   ASSERT_TRUE(tmp->is_avaiable());
   
-  
+  string null_str = "";
+  ReturnCode::type ret;
+  ret = tmp->create_node("/get_child_test", null_str, CreateMode::Persistent);
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  for (int i = 0;i <= 9;++i) {
+    std::stringstream ss;
+    string buffer;
+    ss << "/get_child_test/" << i;
+    ss >> buffer;
+    ret = tmp->create_node(buffer, null_str, CreateMode::Persistent);
+    ASSERT_EQ(ret, ReturnCode::Ok);
+  }
+  std::vector<string> children;
+  ret = tmp->get_children_of_path("/get_child_test", children);
+  ASSERT_EQ(children.size(), 10);
+  for (int i = 0;i <= 9;++i) {
+    std::stringstream ss;
+    string buffer;
+    ss << "/get_child_test/" << i;
+    ss >> buffer;
+    ret = tmp->delete_node(buffer);
+    ASSERT_EQ(ret, ReturnCode::Ok);
+  }
+  ret = tmp->delete_node("/get_child_test");
+  ASSERT_EQ(ret, ReturnCode::Ok);
 }
 
 TEST(ZKCLIENT, SET_DATA_OF_NODE) {
