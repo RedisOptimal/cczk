@@ -9,7 +9,7 @@
 
 namespace cczk {
 DEFINE_int32(xcs_zk_node_max_length, 1024*1024, "Default length limitation of zookeeper node's data is 1M.");
-DEFINE_int32(refresh_timeval, 10, "Default refresh timeval.");
+DEFINE_int32(refresh_timeval, 1, "Default refresh timeval.");
 
 zkclient::zkclient(): _zhandle(NULL),
             _background_watcher(true),
@@ -359,7 +359,7 @@ ReturnCode::type zkclient::delete_node(const string path) {
   return ReturnCode::Ok;
 }
 
-ReturnCode::type zkclient::add_listener(boost::shared_ptr< watcher > listener, string path) {
+ReturnCode::type zkclient::add_listener(boost::shared_ptr< watcher > &listener, string path) {
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }

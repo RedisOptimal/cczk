@@ -87,7 +87,7 @@ namespace cczk {
     
     ReturnCode::type exist(const string/*path*/);
     
-    ReturnCode::type add_listener(boost::shared_ptr<watcher>/*listener*/, string/*path*/);
+    ReturnCode::type add_listener(boost::shared_ptr<watcher>&/*listener*/, string/*path*/);
    
     ReturnCode::type drop_listener(boost::shared_ptr<watcher>/*listener*/);
     
