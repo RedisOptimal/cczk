@@ -236,6 +236,7 @@ TEST(ZKCLIENT, ADD_LISTENER) {
   Stupid stupid;
   watcher::Listener listener = boost::bind(&Stupid::stupid_listener, &stupid, _1, _2);
   boost::shared_ptr<watcher> watch = watcher_factory::get_watcher(listener);
+  stupid.fout << watch.get();
   ret = tmp->add_listener(watch, "/listener_test");
   ASSERT_EQ(ret, ReturnCode::Ok);
   string data = "thisistest";

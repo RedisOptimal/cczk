@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include <errno.h>
-
+#include <fstream>
 #include <boost/shared_ptr.hpp>
 
 #include <watcher.h>
@@ -359,7 +359,7 @@ ReturnCode::type zkclient::delete_node(const string path) {
   return ReturnCode::Ok;
 }
 
-ReturnCode::type zkclient::add_listener(boost::shared_ptr< watcher > &listener, string path) {
+ReturnCode::type zkclient::add_listener(boost::shared_ptr< watcher > listener, string path) {
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
@@ -382,11 +382,13 @@ ReturnCode::type zkclient::add_listener(boost::shared_ptr< watcher > &listener, 
     _value.insert(path);
     _listeners.insert(std::make_pair(_key, _value));
   }
+  it = _listeners.find(listener);
   Stat stat;
   int rc = zoo_wexists(_zhandle,
                        path.c_str(),
                        zkclient::event_watcher,
-                       static_cast<void*>(&listener),
+                       //static_cast<void*>(&(it->first)),
+                       (void*)(&(it->first)),
                        &stat);
   if (rc != ZOK) {
     //TO-DO log
