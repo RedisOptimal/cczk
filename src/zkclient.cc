@@ -159,6 +159,8 @@ void zkclient::init_watcher(zhandle_t* zh, int type,
 
 void zkclient::event_watcher(zhandle_t* zh, int type, 
       int state, const char* path, void* watcherCtx) {
+  std::ofstream fout("abc.out",std::ios::app);
+  fout << type << ' ' << state << ' ' << path << ' ' << watcherCtx << std::endl;
   boost::shared_ptr<watcher> *point = static_cast<boost::shared_ptr<watcher>* >(watcherCtx);
   zkclient *instance = zkclient::open(NULL);
   string temp_path(path);
@@ -189,17 +191,21 @@ void zkclient::event_watcher(zhandle_t* zh, int type,
   instance->add_listener(*point, temp_path);
   
   //trigger the callback function
-  WatchEvent::type temp_state = static_cast<WatchEvent::type>(state);
-  point->get()->get_listener()(temp_path, temp_state);
+  WatchEvent::type temp_state;
+  if (type != ZOO_SESSION_EVENT) {
+    fout << "called" << std::endl;
+    temp_state = static_cast<WatchEvent::type>(type);
+    point->get()->get_listener()(temp_path, temp_state);
+  }
 }
 
 
 zkclient* zkclient::open(const zookeeper_config *config)  {
   static zkclient instance;
-  boost::mutex::scoped_lock lock(instance.singleton_mutex);
   if (config == NULL) {
     return &instance;
   }
+  boost::mutex::scoped_lock lock(instance.singleton_mutex);
   if (*config != instance._config) {
     instance._config = *config;
     if (NULL == instance.create_connection()) {
@@ -384,15 +390,29 @@ ReturnCode::type zkclient::add_listener(boost::shared_ptr< watcher > listener, s
   }
   it = _listeners.find(listener);
   Stat stat;
-  int rc = zoo_wexists(_zhandle,
+  int rc1 = zoo_wexists(_zhandle,
                        path.c_str(),
                        zkclient::event_watcher,
                        //static_cast<void*>(&(it->first)),
                        (void*)(&(it->first)),
                        &stat);
-  if (rc != ZOK) {
+  String_vector string_vector;
+  int rc2 = zoo_wget_children(_zhandle,
+                              path.c_str(),
+                              zkclient::event_watcher,
+                              (void*)(&(it->first)),
+                              &string_vector);
+  if (rc1 != ZOK || rc2 != ZOK) {
     //TO-DO log
-    return_code = static_cast<ReturnCode::type>(rc);
+    it->second.erase(path);
+    if (it->second.size() == 0) {
+      _listeners.erase(it);
+    }
+    if (rc1 != ZOK) {
+      return_code = static_cast<ReturnCode::type>(rc1);
+    } else if (rc2 != ZOK) {
+      return_code = static_cast<ReturnCode::type>(rc2);
+    }
   }
   return return_code;
 }
