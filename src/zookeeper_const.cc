@@ -105,6 +105,24 @@ const std::string toString(type eventType) {
 
 }  // namespace WatchEvent
 
+namespace CreateMode {
+const std::string toString(int32_t createMode) {
+  switch (createMode) {
+    case Persistent:
+      return "Persistent";
+    case PersistentSequential:
+      return "PersistentSequential";
+    case Ephemeral:
+      return "Ephemeral";
+    case EphemeralSequential:
+      return "EphemeralSequential";
+  }
+  XCS_ERROR << "Unknow create mode: " << createMode << std::endl;
+  return str(boost::format("UnknowCreateMode(%d)") % createMode);
+}
+  
+}  // namespace CreateMode
+
 namespace Permission {
 
 const std::string toString(int32_t permType) {

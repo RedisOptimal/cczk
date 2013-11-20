@@ -24,7 +24,13 @@ namespace cczk {
   class watcher : noncopyable {
   public  :
     typedef boost::function<void(const std::string&, WatchEvent::type)> Listener;
+
+    bool _watch_data;
+    bool _watch_children;
+
     explicit watcher(Listener &listener) {
+      _watch_data = true;
+      _watch_children = false;
       _live = true;
       _listener = listener;
     }
