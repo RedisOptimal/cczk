@@ -213,7 +213,9 @@ void zkclient::event_watcher(zhandle_t* zh, int type,
   ret = instance->add_listener(*point, temp_path);
   if (ret != ReturnCode::Ok) {
     XCS_ERROR << "[EVENT WATCHER ERROR]RETCODE=" << ReturnCode::toString(ret) << ".PATH=" << temp_path;
+    return;
   }
+  
   //trigger the callback function
   WatchEvent::type temp_state;
   if (type != ZOO_SESSION_EVENT) {
@@ -223,6 +225,7 @@ void zkclient::event_watcher(zhandle_t* zh, int type,
     }
     point->get()->get_listener()(temp_path, temp_state);
   }
+  
 }
 
 
@@ -412,6 +415,9 @@ ReturnCode::type zkclient::add_listener(boost::shared_ptr< watcher > listener, s
     _listeners.insert(std::make_pair(_key, _value));
   }
   it = _listeners.find(listener);
+  if ((return_code = exist(path)) != ReturnCode::Ok) {
+    return return_code;
+  }
   if (listener->_watch_data) {
     Stat stat;
     int rc1 = zoo_wexists(_zhandle,
@@ -425,6 +431,9 @@ ReturnCode::type zkclient::add_listener(boost::shared_ptr< watcher > listener, s
       return_code = static_cast<ReturnCode::type>(rc1);
     }
   }
+  if ((return_code = exist(path)) != ReturnCode::Ok) {
+    return return_code;
+  }
   if (listener->_watch_children) {
     String_vector string_vector;
     int rc2 = zoo_wget_children(_zhandle,
@@ -432,12 +441,12 @@ ReturnCode::type zkclient::add_listener(boost::shared_ptr< watcher > listener, s
                                 zkclient::event_watcher,
                                 (void*)(&(it->first)),
                                 &string_vector);
-    deallocate_String_vector(&string_vector);
     if (rc2 != ZOK) {
       XCS_ERROR << "[ADD LISTENER]RETCODE=" << zerror(rc2) <<
       ".PATH=" << path << ".Watcher=" << listener;
       return_code = static_cast<ReturnCode::type>(rc2);
     }
+    deallocate_String_vector(&string_vector);
   } 
   return return_code;
 }

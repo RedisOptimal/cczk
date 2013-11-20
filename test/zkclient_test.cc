@@ -88,6 +88,9 @@ TEST(ZKCLIENT, GET_CHILDREN_OF_PATH) {
     ret = tmp->delete_node(buffer);
     ASSERT_EQ(ret, ReturnCode::Ok);
   }
+  ret = tmp->get_children_of_path("/get_child_test", children);
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  ASSERT_EQ(children.size(), 0);
   ret = tmp->delete_node("/get_child_test");
   ASSERT_EQ(ret, ReturnCode::Ok);
 }
@@ -194,6 +197,14 @@ TEST(ZKCLIENT, EXIST) {
   ASSERT_NE(tmp, NULL);
   ASSERT_TRUE(tmp->is_avaiable());
   
+  ReturnCode::type ret;
+  string null_str = "";
+  ret = tmp->create_node("/abc", null_str, CreateMode::Ephemeral);
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  ret = tmp->exist("/abc");
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  ret = tmp->exist("/test/abc");
+  ASSERT_EQ(ret, ReturnCode::NoNode);
 }
 
 class Stupid {
@@ -204,11 +215,12 @@ public:
   }
   
   void stupid_listener(const std::string &path, cczk::WatchEvent::type type) {
+    using namespace cczk;
     _path = path;
     _watch_type = type;
     _counter++;
     fout << "Stupid Listener is running on [ path: " << path << "; Counter : " <<
-    _counter << "; Type : " << cczk::WatchEvent::toString(type) << " ]\n";
+    _counter << "; Type : " << WatchEvent::toString(type) << " ]\n";
     fout.flush();
   }
   
@@ -231,26 +243,28 @@ TEST(ZKCLIENT, ADD_LISTENER) {
   string null_str = "";
   ReturnCode::type ret;
   ret = tmp->create_node("/listener_test", null_str, CreateMode::Persistent);
-  ASSERT_EQ(ret, ReturnCode::Ok);
+//  ASSERT_EQ(ret, ReturnCode::Ok);
   
   Stupid stupid;
   watcher::Listener listener = boost::bind(&Stupid::stupid_listener, &stupid, _1, _2);
   boost::shared_ptr<watcher> watch = watcher_factory::get_watcher(listener);
-  stupid.fout << watch.get();
+  watch->_watch_children = true;
   ret = tmp->add_listener(watch, "/listener_test");
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  ret = tmp->create_node("/listener_test/child1", null_str, CreateMode::Ephemeral);
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  ret = tmp->add_listener(watch, "/listener_test/child1");
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  ret = tmp->delete_node("/listener_test/child1");
   ASSERT_EQ(ret, ReturnCode::Ok);
   string data = "thisistest";
   ret = tmp->set_data_of_node("/listener_test", data);
   ASSERT_EQ(ret, ReturnCode::Ok);
-  ret = tmp->create_node("/listener_test/child1", null_str, CreateMode::Ephemeral);
-  ASSERT_EQ(ret, ReturnCode::Ok);
-  tmp->close();
-  tmp->clear();
-  tmp = zkclient::open(&config);
+
   ret = tmp->delete_node("/listener_test");
-  ASSERT_EQ(ret, ReturnCode::Ok);
-  tmp->close();
+//  ASSERT_EQ(ret, ReturnCode::Ok);
   tmp->clear();
+  tmp->close();
 }
 
 
