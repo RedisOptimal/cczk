@@ -48,7 +48,6 @@ namespace cczk {
     bool _background_watcher;
     boost::recursive_mutex background_mutex;
     listener_map _listeners;                
-    std::map<string, std::pair<string, CreateMode::type> > _ephemeral_node;
     boost::mutex singleton_mutex;
     
     zkclient();

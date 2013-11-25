@@ -33,7 +33,7 @@ void zkclient::update_auth() {
                             NULL
                             );
       if (rc != ZOK) {
-        //TO-DO log 
+        XCS_WARN << "[UPDATE AUTH]RETCODE=" << zerror(rc) << "@" << certification;
       }
     }
   } 
@@ -48,7 +48,11 @@ zhandle_t* zkclient::create_connection() {
   sleep(rand() % 10);
 #endif
   FILE *zk_log = fopen("zookeeper.out","w");
-  zoo_set_log_stream(zk_log);
+  if (zk_log != NULL) {
+    zoo_set_log_stream(zk_log);
+  } else {
+    XCS_ERROR << "Can't create zk log file.";
+  }
   _zhandle = zookeeper_init((_config.get_host()+"/"+_config.get_root()).c_str(),
                             zkclient::init_watcher,
                             _config.get_session_timeout(),
@@ -84,24 +88,18 @@ void zkclient::watcher_loop() {
         if (_key->is_live()) {
           listener_map_value::iterator jt;
           for (jt = _value.begin();jt != _value.end(); ++jt) {
-            ReturnCode::type ret;
-            ret = add_listener(_key, *jt);
-            //because of background_mutex, do not use add_listener()
-            /*Stat stat;
-            int rc = zoo_wexists(_zhandle,
-                                jt->c_str(),
-                                zkclient::event_watcher,
-                                static_cast<void*>(&_key),
-                                &stat);
-            if (rc != ZOK) {
-              //TO-DO log
-            }*/
+            event_watcher(this->_zhandle,
+                          WatchEvent::ZnodeChildrenChanged,
+                          0,
+                          jt->c_str(),
+                          (void*)(&_key));
+            event_watcher(this->_zhandle,
+                          WatchEvent::ZnodeDataChanged,
+                          0,
+                          jt->c_str(),
+                          (void*)(&_key));
           }
         }
-      }
-      std::map<string ,pair<string, CreateMode::type> >::iterator jt;
-      for (jt = _ephemeral_node.begin();jt != _ephemeral_node.end(); ++jt) {
-        create_node(jt->first, jt->second.first, jt->second.second);
       }
     }
   }
@@ -113,7 +111,6 @@ void zkclient::clear() {
   for (it = _listeners.begin();it != _listeners.end(); ++it) {
     it->first->close();
   }
-  _ephemeral_node.clear();
 }
 
  
@@ -150,12 +147,27 @@ void zkclient::init_watcher(zhandle_t* zh, int type,
     if (state == SessionState::Expired) {
       instance->close();
       while (NULL == instance->create_connection()) {
-        //TO-DO log   
+        XCS_ERROR << "[INIT_WATCHER] Can't create connection.";
+        sleep(5);
       }
     } else if (state == SessionState::Connecting) {
-        //TO-DO log   
+      XCS_WARN << "[ZK CONNECTION NOT STABILITY]";
     } else if (state == SessionState::Connected) {
-        //TO-DO log
+      XCS_INFO << "Connection with zk";
+    }
+    if (state != SessionState::Connecting) {
+      listener_map::iterator it;
+      for (it = instance->_listeners.begin();
+           it != instance->_listeners.end();
+           ++it) {
+        if (it->first->is_live()) {
+          listener_map_value::iterator jt;
+          for (jt = it->second.begin();jt != it->second.end();++jt) {
+            instance->event_watcher(instance->_zhandle, ZOO_CHANGED_EVENT, 0, jt->c_str(), (void*)(&(it->first)));
+            instance->event_watcher(instance->_zhandle, ZOO_CHILD_EVENT, 0, jt->c_str(), (void*)(&(it->first)));
+          }
+        }
+      }
     }
   } 
 }
@@ -165,11 +177,14 @@ void zkclient::event_watcher(zhandle_t* zh, int type,
   boost::shared_ptr<watcher> *point = static_cast<boost::shared_ptr<watcher>* >(watcherCtx);
   zkclient *instance = zkclient::open(NULL);
   string temp_path(path);
+  
+  boost::recursive_mutex::scoped_lock lock(instance->background_mutex);
   //already droped by user
   listener_map::iterator it;
+  
   //check wather in listener
   if ((it = instance->_listeners.find(*point)) == instance->_listeners.end()) {  
-    //TO-DO log bug
+    XCS_ERROR << "[EVENT WATCHER]Wather not exist anymore";
     return;
   }
   
@@ -192,12 +207,15 @@ void zkclient::event_watcher(zhandle_t* zh, int type,
   ReturnCode::type ret;
   ret = instance->add_listener(*point, temp_path);
   if (ret != ReturnCode::Ok) {
-    XCS_ERROR << "event_watcher type=" << ReturnCode::toString(ret) << " path=" << temp_path;
+    XCS_ERROR << "[EVENT WATCHER]RETCODE=" << ReturnCode::toString(ret) << "@PATH=" << temp_path;
   }
   //trigger the callback function
   WatchEvent::type temp_state;
   if (type != ZOO_SESSION_EVENT) {
     temp_state = static_cast<WatchEvent::type>(type);
+    if (temp_state == WatchEvent::ZnodeRemoved || temp_state == WatchEvent::ZnodeCreated) {
+      temp_state = WatchEvent::ZnodeDataChanged;
+    }
     point->get()->get_listener()(temp_path, temp_state);
   }
 }
@@ -237,13 +255,13 @@ ReturnCode::type zkclient::get_children_of_path(const string path, std::vector< 
   Stat stat;
   ReturnCode::type return_code;
   if ((return_code = exist(path)) != ReturnCode::Ok) {
-    //TO-DO log
+    XCS_ERROR << "[GET CHILDREN OF PATH]RETCODE=" << ReturnCode::toString(return_code) << "@PATH=" << path;
     return return_code;
   }
   String_vector string_vector;
   int rc = zoo_get_children(this->_zhandle, path.c_str(), 0, &string_vector);
   if (rc != ZOK) {
-    //TO-DO log
+    XCS_ERROR << "[GET CHILDREN OF PATH]RETCODE=" << ReturnCode::toString(return_code) << "@PATH=" << path;
     return_code = static_cast<ReturnCode::type>(rc);
   } else {
     children.clear();
@@ -285,7 +303,7 @@ ReturnCode::type zkclient::get_data_of_node(const string path, string& value) {
   }
   ReturnCode::type return_code;
   if ((return_code = exist(path)) != ReturnCode::Ok) {
-    //TO-DO log
+    XCS_ERROR << "[GET DATA OF NODE]RETCODE=" << ReturnCode::toString(return_code) << "@PATH=" << path;
     return return_code;
   }
   int length = FLAGS_xcs_zk_node_max_length;
@@ -347,11 +365,9 @@ ReturnCode::type zkclient::create_node(const string path, string& data, CreateMo
                     0);
   }
   if (rc != ZOK) {
-    //TO-DO log
+    XCS_ERROR << "[CREATE NODE]RETCODE=" << zerror(rc)
+    << "@PATH=" << path << " DATA=" << data << " MODE=" << CreateMode::toString(mode);
     return static_cast<ReturnCode::type>(rc);
-  }
-  if (mode == CreateMode::Ephemeral) { 
-    _ephemeral_node.insert(std::make_pair(path, std::make_pair(data, mode)));
   }
   return ReturnCode::Ok;
 }
@@ -360,7 +376,6 @@ ReturnCode::type zkclient::delete_node(const string path) {
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
-  _ephemeral_node.erase(path);
   int rc = zoo_delete(_zhandle, path.c_str(), -1);
   if (rc != ZOK) {
     return static_cast<ReturnCode::type>(rc);
@@ -399,6 +414,12 @@ ReturnCode::type zkclient::add_listener(boost::shared_ptr< watcher > listener, s
                        //static_cast<void*>(&(it->first)),
                        (void*)(&(it->first)),
                        &stat);
+  if (rc1 != ZOK) {
+    XCS_ERROR << "[ADD LISTENER]RETCODE=" << zerror(rc1) <<
+    "@PATH=" << path << " Watcher=" << listener;
+    return_code = static_cast<ReturnCode::type>(rc1);
+  }
+  
   String_vector string_vector;
   int rc2 = zoo_wget_children(_zhandle,
                               path.c_str(),
@@ -407,14 +428,10 @@ ReturnCode::type zkclient::add_listener(boost::shared_ptr< watcher > listener, s
                               &string_vector);
   deallocate_String_vector(&string_vector);
   
-  if (rc1 != ZOK || rc2 != ZOK) {
-    if (rc1 != ZOK){
-      return_code = static_cast<ReturnCode::type>(rc1);
-      XCS_ERROR << "[ADD LISTENER]RETCODE=" << ReturnCode::toString(return_code) << "@PATH=" << path;
-    } else if (rc2 != ZOK) {
-      return_code = static_cast<ReturnCode::type>(rc2); 
-      XCS_ERROR << "[ADD LISTENER]RETCODE=" << ReturnCode::toString(return_code) << "@PATH=" << path;
-    }
+  if (rc2 != ZOK) {
+    XCS_ERROR << "[ADD LISTENER]RETCODE=" << zerror(rc2) <<
+    "@PATH=" << path << " Watcher=" << listener;
+    return_code = static_cast<ReturnCode::type>(rc2);
   }
   return return_code;
 }
