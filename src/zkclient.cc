@@ -9,7 +9,7 @@
 
 namespace cczk {
 DEFINE_int32(xcs_zk_node_max_length, 1024*1024, "Default length limitation of zookeeper node's data is 1M.");
-DEFINE_int32(refresh_timeval, 1, "Default refresh timeval.");
+DEFINE_int32(refresh_timeval, 10, "Default refresh timeval.");
 
 zkclient::zkclient(): _zhandle(NULL),
             _background_watcher(true),
@@ -76,7 +76,7 @@ void zkclient::watcher_loop() {
     sleep(FLAGS_refresh_timeval);
     {
       if (!is_avaiable()) continue;
-      boost::mutex::scoped_lock lock(background_mutex);
+      boost::recursive_mutex::scoped_lock lock(background_mutex);
       listener_map::iterator it;
       for (it = _listeners.begin(); it != _listeners.end(); ++it) {
         listener_map_key _key = it->first;
@@ -84,8 +84,10 @@ void zkclient::watcher_loop() {
         if (_key->is_live()) {
           listener_map_value::iterator jt;
           for (jt = _value.begin();jt != _value.end(); ++jt) {
+            ReturnCode::type ret;
+            ret = add_listener(_key, *jt);
             //because of background_mutex, do not use add_listener()
-            Stat stat;
+            /*Stat stat;
             int rc = zoo_wexists(_zhandle,
                                 jt->c_str(),
                                 zkclient::event_watcher,
@@ -93,7 +95,7 @@ void zkclient::watcher_loop() {
                                 &stat);
             if (rc != ZOK) {
               //TO-DO log
-            }
+            }*/
           }
         }
       }
@@ -106,7 +108,7 @@ void zkclient::watcher_loop() {
 }
  
 void zkclient::clear() {
-  boost::mutex::scoped_lock lock(background_mutex);
+  boost::recursive_mutex::scoped_lock lock(background_mutex);
   listener_map::iterator it;
   for (it = _listeners.begin();it != _listeners.end(); ++it) {
     it->first->close();
@@ -134,6 +136,7 @@ bool zkclient::is_avaiable()  {
  
 void zkclient::close() {
   boost::mutex::scoped_lock lock(this->singleton_mutex);
+  boost::recursive_mutex::scoped_lock lock2(this->background_mutex);
   if (_zhandle != NULL) {
     zookeeper_close(_zhandle);
     _zhandle = NULL; 
@@ -186,11 +189,17 @@ void zkclient::event_watcher(zhandle_t* zh, int type,
   }
   
   //register back to zk
-  instance->add_listener(*point, temp_path);
-  
+  ReturnCode::type ret;
+  ret = instance->add_listener(*point, temp_path);
+  if (ret != ReturnCode::Ok) {
+    XCS_ERROR << "event_watcher type=" << ReturnCode::toString(ret) << " path=" << temp_path;
+  }
   //trigger the callback function
-  WatchEvent::type temp_state = static_cast<WatchEvent::type>(state);
-  point->get()->get_listener()(temp_path, temp_state);
+  WatchEvent::type temp_state;
+  if (type != ZOO_SESSION_EVENT) {
+    temp_state = static_cast<WatchEvent::type>(type);
+    point->get()->get_listener()(temp_path, temp_state);
+  }
 }
 
 
@@ -367,7 +376,7 @@ ReturnCode::type zkclient::add_listener(boost::shared_ptr< watcher > listener, s
   if ((return_code = exist(path)) != ReturnCode::Ok) {
     return return_code;
   }
-  boost::mutex::scoped_lock lock(background_mutex);
+  boost::recursive_mutex::scoped_lock lock(background_mutex);
   listener_map::iterator it;
   //add listener to local data-struct 
   if ((it = _listeners.find(listener)) != _listeners.end()) {  //already in map
@@ -384,15 +393,28 @@ ReturnCode::type zkclient::add_listener(boost::shared_ptr< watcher > listener, s
   }
   it = _listeners.find(listener);
   Stat stat;
-  int rc = zoo_wexists(_zhandle,
+  int rc1 = zoo_wexists(_zhandle,
                        path.c_str(),
                        zkclient::event_watcher,
                        //static_cast<void*>(&(it->first)),
                        (void*)(&(it->first)),
                        &stat);
-  if (rc != ZOK) {
-    //TO-DO log
-    return_code = static_cast<ReturnCode::type>(rc);
+  String_vector string_vector;
+  int rc2 = zoo_wget_children(_zhandle,
+                              path.c_str(),
+                              zkclient::event_watcher,
+                              (void*)(&(it->first)),
+                              &string_vector);
+  deallocate_String_vector(&string_vector);
+  
+  if (rc1 != ZOK || rc2 != ZOK) {
+    if (rc1 != ZOK){
+      return_code = static_cast<ReturnCode::type>(rc1);
+      XCS_ERROR << "[ADD LISTENER]RETCODE=" << ReturnCode::toString(return_code) << "@PATH=" << path;
+    } else if (rc2 != ZOK) {
+      return_code = static_cast<ReturnCode::type>(rc2); 
+      XCS_ERROR << "[ADD LISTENER]RETCODE=" << ReturnCode::toString(return_code) << "@PATH=" << path;
+    }
   }
   return return_code;
 }
@@ -401,7 +423,7 @@ ReturnCode::type zkclient::drop_listener_with_path(boost::shared_ptr< watcher > 
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
-  boost::mutex::scoped_lock lock(background_mutex);
+  boost::recursive_mutex::scoped_lock lock(background_mutex);
   listener_map::iterator it;
   if ((it = _listeners.find(listener)) != _listeners.end()) {
     listener_map_value::iterator jt;
@@ -420,7 +442,7 @@ ReturnCode::type zkclient::drop_listener(boost::shared_ptr< watcher > listener) 
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
-  boost::mutex::scoped_lock lock(background_mutex);
+  boost::recursive_mutex::scoped_lock lock(background_mutex);
   listener_map::iterator it;
   if ((it = _listeners.find(listener)) != _listeners.end()) {  //already in map
     if (!it->first->is_live()) {  //removed in past

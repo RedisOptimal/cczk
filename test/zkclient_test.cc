@@ -209,6 +209,10 @@ public:
     _counter++;
     fout << "Stupid Listener is running on [ path: " << path << "; Counter : " <<
     _counter << "; Type : " << cczk::WatchEvent::toString(type) << " ]\n";
+    std::vector<std::string> ret;
+    cczk::zkclient *tmp = cczk::zkclient::open(NULL);
+    tmp->get_children_of_path(path,ret);
+    fout << "CC : " << ret.size() << std::endl;
     fout.flush();
   }
   
@@ -230,27 +234,31 @@ TEST(ZKCLIENT, ADD_LISTENER) {
   
   string null_str = "";
   ReturnCode::type ret;
+/*  if (tmp->exist("/listener_test") == ReturnCode::Ok) {
+    tmp->delete_node("/listener_test");
+  }
   ret = tmp->create_node("/listener_test", null_str, CreateMode::Persistent);
   ASSERT_EQ(ret, ReturnCode::Ok);
-  
+*/  
   Stupid stupid;
   watcher::Listener listener = boost::bind(&Stupid::stupid_listener, &stupid, _1, _2);
   boost::shared_ptr<watcher> watch = watcher_factory::get_watcher(listener);
   stupid.fout << watch.get();
   ret = tmp->add_listener(watch, "/listener_test");
   ASSERT_EQ(ret, ReturnCode::Ok);
-  string data = "thisistest";
-  ret = tmp->set_data_of_node("/listener_test", data);
-  ASSERT_EQ(ret, ReturnCode::Ok);
   ret = tmp->create_node("/listener_test/child1", null_str, CreateMode::Ephemeral);
   ASSERT_EQ(ret, ReturnCode::Ok);
-  tmp->close();
-  tmp->clear();
-  tmp = zkclient::open(&config);
-  ret = tmp->delete_node("/listener_test");
+  sleep(2);
+  ret = tmp->delete_node("/listener_test/child1");
   ASSERT_EQ(ret, ReturnCode::Ok);
+//  string data = "thisistest";
+//  ret = tmp->set_data_of_node("/listener_test", data);
+//  ASSERT_EQ(ret, ReturnCode::Ok);
+  sleep(2);
+//  ret = tmp->delete_node("/listener_test");
+//  ASSERT_EQ(ret, ReturnCode::Ok);
+//  sleep(2);
   tmp->close();
-  tmp->clear();
 }
 
 

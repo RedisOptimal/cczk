@@ -46,7 +46,7 @@ namespace cczk {
     zookeeper_config _config;
     boost::thread _background_watcher_thread;
     bool _background_watcher;
-    boost::mutex background_mutex;
+    boost::recursive_mutex background_mutex;
     listener_map _listeners;                
     std::map<string, std::pair<string, CreateMode::type> > _ephemeral_node;
     boost::mutex singleton_mutex;
