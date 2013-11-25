@@ -9,7 +9,7 @@ TEST(ZKCLIENT, OPEN) {
   using namespace cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
-  ASSERT_NE(tmp, NULL);
+  ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->is_avaiable());
   
   config.set_host("no-exist:2181");
@@ -19,17 +19,17 @@ TEST(ZKCLIENT, OPEN) {
   config.set_host("localhost:2181");
   config.set_root("");
   tmp = zkclient::open(&config);
-  ASSERT_NE(tmp, NULL);
+  ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->is_avaiable());
   tmp->close();
   ASSERT_FALSE(tmp->is_avaiable());
   ASSERT_EQ(tmp, zkclient::open(NULL));
   tmp = zkclient::open(&config);
-  ASSERT_NE(tmp, NULL);
+  ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->is_avaiable());
   config.set_session_timeout(2000);
   tmp = zkclient::open(&config);
-  ASSERT_NE(tmp, NULL);
+  ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->is_avaiable());
   tmp->close();
 }
@@ -38,7 +38,7 @@ TEST(ZKCLIENT, CLOSE) {
   using namespace cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
-  ASSERT_NE(tmp, NULL);
+  ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->is_avaiable());
   tmp->close();
 }
@@ -51,7 +51,7 @@ TEST(ZKCLIENT, IS_AVALIABLE) {
   using namespace cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
-  ASSERT_NE(tmp, NULL);
+  ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->is_avaiable());
   tmp->close();
   tmp->clear();
@@ -62,7 +62,7 @@ TEST(ZKCLIENT, GET_CHILDREN_OF_PATH) {
   using namespace cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
-  ASSERT_NE(tmp, NULL);
+  ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->is_avaiable());
   
   string null_str = "";
@@ -96,7 +96,7 @@ TEST(ZKCLIENT, SET_DATA_OF_NODE) {
   using namespace cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
-  ASSERT_NE(tmp, NULL);
+  ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->is_avaiable());
   string null_str = "";
   ReturnCode::type ret;
@@ -123,7 +123,7 @@ TEST(ZKCLIENT, GET_DATA_OF_NODE) {
   using namespace cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
-  ASSERT_NE(tmp, NULL);
+  ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->is_avaiable());
   string null_str = "";
   ReturnCode::type ret;
@@ -138,7 +138,7 @@ TEST(ZKCLIENT, CREATE_NODE) {
   using namespace cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
-  ASSERT_NE(tmp, NULL);
+  ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->is_avaiable());
   string null_str = "";
   ReturnCode::type ret;
@@ -181,7 +181,7 @@ TEST(ZKCLIENT, DELETE_NODE) {
   using namespace cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
-  ASSERT_NE(tmp, NULL);
+  ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->is_avaiable());
   
   
@@ -191,15 +191,15 @@ TEST(ZKCLIENT, EXIST) {
   using namespace cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
-  ASSERT_NE(tmp, NULL);
+  ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->is_avaiable());
   
 }
 
 class Stupid {
 public:
-  Stupid() {
-    fout.open("test.out",std::ios::out);
+  explicit Stupid(char *filename) {
+    fout.open(filename,std::ios::out);
     _counter = 0;
   }
   
@@ -211,8 +211,8 @@ public:
     _counter << "; Type : " << cczk::WatchEvent::toString(type) << " ]\n";
     std::vector<std::string> ret;
     cczk::zkclient *tmp = cczk::zkclient::open(NULL);
-    tmp->get_children_of_path(path,ret);
-    fout << "CC : " << ret.size() << std::endl;
+    cczk::ReturnCode::type ret_code = tmp->get_children_of_path(path, ret);
+    fout << "Counter of Children : " << ret.size() << " RETURN_CODE=" << cczk::ReturnCode::toString(ret_code) << std::endl;
     fout.flush();
   }
   
@@ -229,21 +229,20 @@ TEST(ZKCLIENT, ADD_LISTENER) {
   using namespace cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
-  ASSERT_NE(tmp, NULL);
+  ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->is_avaiable());
   
   string null_str = "";
   ReturnCode::type ret;
-/*  if (tmp->exist("/listener_test") == ReturnCode::Ok) {
+  if (tmp->exist("/listener_test") == ReturnCode::Ok) {
     tmp->delete_node("/listener_test");
   }
   ret = tmp->create_node("/listener_test", null_str, CreateMode::Persistent);
   ASSERT_EQ(ret, ReturnCode::Ok);
-*/  
-  Stupid stupid;
+  
+  Stupid stupid("add_listener.out");
   watcher::Listener listener = boost::bind(&Stupid::stupid_listener, &stupid, _1, _2);
   boost::shared_ptr<watcher> watch = watcher_factory::get_watcher(listener);
-  stupid.fout << watch.get();
   ret = tmp->add_listener(watch, "/listener_test");
   ASSERT_EQ(ret, ReturnCode::Ok);
   ret = tmp->create_node("/listener_test/child1", null_str, CreateMode::Ephemeral);
@@ -251,13 +250,14 @@ TEST(ZKCLIENT, ADD_LISTENER) {
   sleep(2);
   ret = tmp->delete_node("/listener_test/child1");
   ASSERT_EQ(ret, ReturnCode::Ok);
-//  string data = "thisistest";
-//  ret = tmp->set_data_of_node("/listener_test", data);
-//  ASSERT_EQ(ret, ReturnCode::Ok);
   sleep(2);
-//  ret = tmp->delete_node("/listener_test");
-//  ASSERT_EQ(ret, ReturnCode::Ok);
-//  sleep(2);
+  string data = "thisistest";
+  ret = tmp->set_data_of_node("/listener_test", data);
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  sleep(2);
+  ret = tmp->delete_node("/listener_test");
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  sleep(2);
   tmp->close();
 }
 
@@ -266,9 +266,39 @@ TEST(ZKCLIENT, DROP_LISTENER) {
   using namespace cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
-  ASSERT_NE(tmp, NULL);
+  ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->is_avaiable());
   
+  string null_str = "";
+  ReturnCode::type ret;
+  if (tmp->exist("/listener_test") == ReturnCode::Ok) {
+    tmp->delete_node("/listener_test");
+  }
+  ret = tmp->create_node("/listener_test", null_str, CreateMode::Persistent);
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  
+  Stupid stupid("drop_listener.out");
+  watcher::Listener listener = boost::bind(&Stupid::stupid_listener, &stupid, _1, _2);
+  boost::shared_ptr<watcher> watch = watcher_factory::get_watcher(listener);
+  ret = tmp->add_listener(watch, "/listener_test");
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  ret = tmp->create_node("/listener_test/child1", null_str, CreateMode::Ephemeral);
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  sleep(2);
+  ret = tmp->drop_listener(watch);
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  sleep(2);
+  ret = tmp->delete_node("/listener_test/child1");
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  sleep(2);
+  string data = "thisistest";
+  ret = tmp->set_data_of_node("/listener_test", data);
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  sleep(2);
+  ret = tmp->delete_node("/listener_test");
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  sleep(2);
+  tmp->close();  
   
 }
 
@@ -277,8 +307,34 @@ TEST(ZKCLIENT, DROP_LISTENER_WITH_PATH) {
   using namespace cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
-  ASSERT_NE(tmp, NULL);
+  ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->is_avaiable());
+  string null_str = "";
+  ReturnCode::type ret;
+  if (tmp->exist("/listener_test") == ReturnCode::Ok) {
+    tmp->delete_node("/listener_test");
+  }
+  ret = tmp->create_node("/listener_test", null_str, CreateMode::Persistent);
+  ASSERT_EQ(ret, ReturnCode::Ok);
   
+  Stupid stupid("drop_listener_with_path.out");
+  watcher::Listener listener = boost::bind(&Stupid::stupid_listener, &stupid, _1, _2);
+  boost::shared_ptr<watcher> watch = watcher_factory::get_watcher(listener);
+  ret = tmp->add_listener(watch, "/listener_test");
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  ret = tmp->create_node("/listener_test/child1", null_str, CreateMode::Ephemeral);
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  sleep(2);
+  ret = tmp->delete_node("/listener_test/child1");
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  sleep(2);
+  string data = "thisistest";
+  ret = tmp->set_data_of_node("/listener_test", data);
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  sleep(2);
+  ret = tmp->delete_node("/listener_test");
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  sleep(2);
+  tmp->close();  
   
 }
