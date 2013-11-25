@@ -9,7 +9,7 @@
 
 namespace cczk {
 DEFINE_int32(xcs_zk_node_max_length, 1024*1024, "Default length limitation of zookeeper node's data is 1M.");
-DEFINE_int32(refresh_timeval, 10, "Default refresh timeval.");
+DEFINE_int32(refresh_timeval, 20, "Default refresh timeval.");
 
 zkclient::zkclient(): _zhandle(NULL),
             _background_watcher(true),
@@ -81,26 +81,7 @@ void zkclient::watcher_loop() {
     {
       if (!is_avaiable()) continue;
       boost::recursive_mutex::scoped_lock lock(background_mutex);
-      listener_map::iterator it;
-      for (it = _listeners.begin(); it != _listeners.end(); ++it) {
-        listener_map_key _key = it->first;
-        listener_map_value _value = it->second;
-        if (_key->is_live()) {
-          listener_map_value::iterator jt;
-          for (jt = _value.begin();jt != _value.end(); ++jt) {
-            event_watcher(this->_zhandle,
-                          WatchEvent::ZnodeChildrenChanged,
-                          0,
-                          jt->c_str(),
-                          (void*)(&_key));
-            event_watcher(this->_zhandle,
-                          WatchEvent::ZnodeDataChanged,
-                          0,
-                          jt->c_str(),
-                          (void*)(&_key));
-          }
-        }
-      }
+      trigger_all_watcher(_listeners);
     }
   }
 }
@@ -119,6 +100,33 @@ zkclient::~zkclient() {
   _background_watcher_thread.join();
   zookeeper_close(_zhandle);
   _zhandle = NULL; 
+}
+
+void zkclient::trigger_all_watcher(zkclient::listener_map& _listeners) {
+  listener_map::iterator it;
+  for (it = _listeners.begin(); it != _listeners.end(); ++it) {
+    listener_map_key _key = it->first;
+    listener_map_value _value = it->second;
+    if (_key->is_live()) {
+      listener_map_value::iterator jt;
+      for (jt = _value.begin();jt != _value.end(); ++jt) {
+        if (_key->watch_child()) {
+          event_watcher(this->_zhandle,
+                        WatchEvent::ZnodeChildrenChanged,
+                        0,
+                        jt->first.c_str(),
+                        (void*)(&_key));
+        }
+        if (_key->watch_data()) {
+          event_watcher(this->_zhandle,
+                        WatchEvent::ZnodeDataChanged,
+                        0,
+                        jt->first.c_str(),
+                        (void*)(&_key));
+        }
+      }
+    }
+  }  
 }
 
  
@@ -156,18 +164,7 @@ void zkclient::init_watcher(zhandle_t* zh, int type,
       XCS_INFO << "Connection with zk";
     }
     if (state != SessionState::Connecting) {
-      listener_map::iterator it;
-      for (it = instance->_listeners.begin();
-           it != instance->_listeners.end();
-           ++it) {
-        if (it->first->is_live()) {
-          listener_map_value::iterator jt;
-          for (jt = it->second.begin();jt != it->second.end();++jt) {
-            instance->event_watcher(instance->_zhandle, ZOO_CHANGED_EVENT, 0, jt->c_str(), (void*)(&(it->first)));
-            instance->event_watcher(instance->_zhandle, ZOO_CHILD_EVENT, 0, jt->c_str(), (void*)(&(it->first)));
-          }
-        }
-      }
+      instance->trigger_all_watcher(instance->_listeners);
     }
   } 
 }
@@ -177,6 +174,13 @@ void zkclient::event_watcher(zhandle_t* zh, int type,
   boost::shared_ptr<watcher> *point = static_cast<boost::shared_ptr<watcher>* >(watcherCtx);
   zkclient *instance = zkclient::open(NULL);
   string temp_path(path);
+  WatchEvent::type temp_state;
+  if (type != ZOO_SESSION_EVENT) {
+    temp_state = static_cast<WatchEvent::type>(type);
+    if (temp_state == WatchEvent::ZnodeRemoved || temp_state == WatchEvent::ZnodeCreated) {
+      temp_state = WatchEvent::ZnodeDataChanged;
+    }  
+  }
   
   boost::recursive_mutex::scoped_lock lock(instance->background_mutex);
   //already droped by user
@@ -191,9 +195,16 @@ void zkclient::event_watcher(zhandle_t* zh, int type,
   listener_map_value::iterator jt;
   if (!it->first->is_live()) {  //watcher die
     if ((jt = it->second.find(temp_path)) != it->second.end()) {  //watcher die and remove path
-      it->second.erase(jt);
-      if (it->second.empty()) {
-        instance->_listeners.erase(it);
+      if (temp_state == WatchEvent::ZnodeDataChanged) {
+        jt->second.first = false;
+      } else if (temp_state == WatchEvent::ZnodeChildrenChanged) {
+        jt->second.second = false;
+      }
+      if (!jt->second.first && !jt->second.second) {
+        it->second.erase(jt);
+        if (it->second.empty()) {
+          instance->_listeners.erase(it);
+        }
       }
     }
     return;
@@ -207,15 +218,12 @@ void zkclient::event_watcher(zhandle_t* zh, int type,
   ReturnCode::type ret;
   ret = instance->add_listener(*point, temp_path);
   if (ret != ReturnCode::Ok) {
-    XCS_ERROR << "[EVENT WATCHER]RETCODE=" << ReturnCode::toString(ret) << "@PATH=" << temp_path;
+    XCS_ERROR << "[EVENT WATCHER]RETCODE=" << ReturnCode::toString(ret)
+    << "@PATH=" << temp_path << " WATCHER=" << point;
   }
+  
   //trigger the callback function
-  WatchEvent::type temp_state;
   if (type != ZOO_SESSION_EVENT) {
-    temp_state = static_cast<WatchEvent::type>(type);
-    if (temp_state == WatchEvent::ZnodeRemoved || temp_state == WatchEvent::ZnodeCreated) {
-      temp_state = WatchEvent::ZnodeDataChanged;
-    }
     point->get()->get_listener()(temp_path, temp_state);
   }
 }
@@ -398,41 +406,47 @@ ReturnCode::type zkclient::add_listener(boost::shared_ptr< watcher > listener, s
     if (!it->first->is_live()) {  //removed in past
       return ReturnCode::Error;
     } else {
-      it->second.insert(path);
+      preproty_of_path _preproty = std::make_pair(listener->watch_data(), listener->watch_child());
+      it->second.insert(std::make_pair(path, _preproty));
     }
   } else {  //not in map
     listener_map_key _key = listener;
     listener_map_value _value;
-    _value.insert(path);
+    preproty_of_path _preproty = std::make_pair(_key->watch_data(), _key->watch_child());
+    _value.insert(std::make_pair(path, _preproty));
     _listeners.insert(std::make_pair(_key, _value));
   }
   it = _listeners.find(listener);
-  Stat stat;
-  int rc1 = zoo_wexists(_zhandle,
-                       path.c_str(),
-                       zkclient::event_watcher,
-                       //static_cast<void*>(&(it->first)),
-                       (void*)(&(it->first)),
-                       &stat);
-  if (rc1 != ZOK) {
-    XCS_ERROR << "[ADD LISTENER]RETCODE=" << zerror(rc1) <<
-    "@PATH=" << path << " Watcher=" << listener;
-    return_code = static_cast<ReturnCode::type>(rc1);
+  if (it->first->watch_data()) {
+    Stat stat;
+    int rc1 = zoo_wexists(_zhandle,
+                        path.c_str(),
+                        zkclient::event_watcher,
+                        (void*)(&(it->first)),
+                        &stat);
+    if (rc1 != ZOK) {
+      XCS_ERROR << "[ADD LISTENER]RETCODE=" << zerror(rc1) <<
+      "@PATH=" << path << " Watcher=" << listener;
+      return_code = static_cast<ReturnCode::type>(rc1);
+    }
   }
   
-  String_vector string_vector;
-  int rc2 = zoo_wget_children(_zhandle,
-                              path.c_str(),
-                              zkclient::event_watcher,
-                              (void*)(&(it->first)),
-                              &string_vector);
-  deallocate_String_vector(&string_vector);
-  
-  if (rc2 != ZOK) {
-    XCS_ERROR << "[ADD LISTENER]RETCODE=" << zerror(rc2) <<
-    "@PATH=" << path << " Watcher=" << listener;
-    return_code = static_cast<ReturnCode::type>(rc2);
+  if (it->first->watch_child()) {
+    String_vector string_vector;
+    int rc2 = zoo_wget_children(_zhandle,
+                                path.c_str(),
+                                zkclient::event_watcher,
+                                (void*)(&(it->first)),
+                                &string_vector);
+    deallocate_String_vector(&string_vector);
+    
+    if (rc2 != ZOK) {
+      XCS_ERROR << "[ADD LISTENER]RETCODE=" << zerror(rc2) <<
+      "@PATH=" << path << " Watcher=" << listener;
+      return_code = static_cast<ReturnCode::type>(rc2);
+    }
   }
+  
   return return_code;
 }
 

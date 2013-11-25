@@ -16,6 +16,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/function.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/concept_check.hpp>
 
 #include <zookeeper_const.h>
 
@@ -24,29 +25,45 @@ namespace cczk {
   class watcher : noncopyable {
   public  :
     typedef boost::function<void(const std::string&, WatchEvent::type)> Listener;
-    explicit watcher(Listener &listener) {
-      _live = true;
+    explicit watcher(Listener &listener, bool watch_data, bool watch_child) {
       _listener = listener;
+      _watch_data = watch_data;
+      _watch_child = watch_child;
     }
     
     void close() {
-      _live = false;
+      close_watch_child();
+      close_watch_data();
     }
     
     bool is_live() {
-      return _live;
-    }
-    
-    void set_listener(Listener &listener) {
-      _listener = listener;
+      return watch_data() || watch_child();
     }
     
     Listener get_listener() {
       return _listener;
     }
+    
+    bool watch_data() {
+      return _watch_data; 
+    }
+    
+    bool watch_child() {
+      return _watch_child; 
+    }
+    
   private :
-    bool _live;
+    bool _watch_data;
+    bool _watch_child;
     Listener _listener;
+    
+    void close_watch_data() {
+      _watch_data = false; 
+    }
+    
+    void close_watch_child() {
+      _watch_child = false; 
+    }
   };
 } // namespace cczk
 

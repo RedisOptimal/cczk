@@ -209,10 +209,16 @@ public:
     _counter++;
     fout << "Stupid Listener is running on [ path: " << path << "; Counter : " <<
     _counter << "; Type : " << cczk::WatchEvent::toString(type) << " ]\n";
-    std::vector<std::string> ret;
     cczk::zkclient *tmp = cczk::zkclient::open(NULL);
-    cczk::ReturnCode::type ret_code = tmp->get_children_of_path(path, ret);
-    fout << "Counter of Children : " << ret.size() << " RETURN_CODE=" << cczk::ReturnCode::toString(ret_code) << std::endl;
+    if (type == cczk::WatchEvent::ZnodeChildrenChanged) {
+      std::vector<std::string> ret;
+      cczk::ReturnCode::type ret_code = tmp->get_children_of_path(path, ret);
+      fout << "Counter of Children : " << ret.size() << " RETURN_CODE=" << cczk::ReturnCode::toString(ret_code) << std::endl;
+    } else {
+      std::string ret;
+      cczk::ReturnCode::type ret_code = tmp->get_data_of_node(path, ret);
+      fout << "Data of Node : " << ret << "RETURN_CODE=" << cczk::ReturnCode::toString(ret_code) << std::endl;
+    }
     fout.flush();
   }
   
@@ -242,7 +248,7 @@ TEST(ZKCLIENT, ADD_LISTENER) {
   
   Stupid stupid("add_listener.out");
   watcher::Listener listener = boost::bind(&Stupid::stupid_listener, &stupid, _1, _2);
-  boost::shared_ptr<watcher> watch = watcher_factory::get_watcher(listener);
+  boost::shared_ptr<watcher> watch = watcher_factory::get_watcher(listener, true, true);
   ret = tmp->add_listener(watch, "/listener_test");
   ASSERT_EQ(ret, ReturnCode::Ok);
   ret = tmp->create_node("/listener_test/child1", null_str, CreateMode::Ephemeral);
@@ -279,7 +285,7 @@ TEST(ZKCLIENT, DROP_LISTENER) {
   
   Stupid stupid("drop_listener.out");
   watcher::Listener listener = boost::bind(&Stupid::stupid_listener, &stupid, _1, _2);
-  boost::shared_ptr<watcher> watch = watcher_factory::get_watcher(listener);
+  boost::shared_ptr<watcher> watch = watcher_factory::get_watcher(listener, true, true);
   ret = tmp->add_listener(watch, "/listener_test");
   ASSERT_EQ(ret, ReturnCode::Ok);
   ret = tmp->create_node("/listener_test/child1", null_str, CreateMode::Ephemeral);
@@ -289,6 +295,13 @@ TEST(ZKCLIENT, DROP_LISTENER) {
   ASSERT_EQ(ret, ReturnCode::Ok);
   sleep(2);
   ret = tmp->delete_node("/listener_test/child1");
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  sleep(2);
+  ret = tmp->add_listener(watch, "/listener_test");
+  ASSERT_EQ(ret, ReturnCode::Error);
+  sleep(2);
+  watch = watcher_factory::get_watcher(listener, true, true);
+  ret = tmp->add_listener(watch, "/listener_test");
   ASSERT_EQ(ret, ReturnCode::Ok);
   sleep(2);
   string data = "thisistest";
@@ -319,7 +332,7 @@ TEST(ZKCLIENT, DROP_LISTENER_WITH_PATH) {
   
   Stupid stupid("drop_listener_with_path.out");
   watcher::Listener listener = boost::bind(&Stupid::stupid_listener, &stupid, _1, _2);
-  boost::shared_ptr<watcher> watch = watcher_factory::get_watcher(listener);
+  boost::shared_ptr<watcher> watch = watcher_factory::get_watcher(listener, true, true);
   ret = tmp->add_listener(watch, "/listener_test");
   ASSERT_EQ(ret, ReturnCode::Ok);
   ret = tmp->create_node("/listener_test/child1", null_str, CreateMode::Ephemeral);

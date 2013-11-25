@@ -22,8 +22,8 @@
 namespace cczk {
   class watcher_factory {
   public  :
-    static boost::shared_ptr<watcher> get_watcher(watcher::Listener &listener) {
-      boost::shared_ptr<watcher> instance(new watcher(listener));
+    static boost::shared_ptr<watcher> get_watcher(watcher::Listener &listener, bool watch_data, bool watch_child) {
+      boost::shared_ptr<watcher> instance(new watcher(listener, watch_data, watch_child));
       return instance;
     }
   };

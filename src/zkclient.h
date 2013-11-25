@@ -37,8 +37,9 @@ namespace cczk {
   class watcher;
   class zkclient : noncopyable {
   private :
+    typedef std::pair<bool, bool> preproty_of_path;  //<watch_data, watch_child>
     typedef boost::shared_ptr<watcher> listener_map_key;  // watcher
-    typedef std::set<string> listener_map_value;  // path of set
+    typedef std::map<string, preproty_of_path> listener_map_value;  // path of set
     typedef std::map<listener_map_key, listener_map_value> listener_map;  
              
     zhandle_t *_zhandle;
@@ -64,6 +65,8 @@ namespace cczk {
     void watcher_loop();
     
     ~zkclient();
+    
+    void trigger_all_watcher(listener_map &);
     
   public  :
     static zkclient* open(const zookeeper_config*/*config*/);
