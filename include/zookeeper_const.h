@@ -91,6 +91,12 @@ namespace ReturnCode {
 
     /** Client authentication failed */
     AuthFailed = -115,
+    
+    /** Zookeeper is closing*/
+    ZkClosing = -116,
+    
+    /** (not error) no server responses to process */
+    ZkNothing = -117,
 
     /** Session moved to another server, so operation is ignored */
     SessionMoved = -118,
