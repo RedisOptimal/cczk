@@ -92,10 +92,10 @@ void ServiceRegistry::ContentChangeListener(const string& path,
           if (rc != ReturnCode::Ok) {
             XCS_ERROR << "Create Node Failed"; 
           }
-          //rc = instance->add_listener(listener_, path);
-          //if (rc != ReturnCode::Ok) {
-          //  XCS_ERROR << "Register listener back failed."; 
-          //}
+          rc = instance->add_listener(listener_, path);
+          if (rc != ReturnCode::Ok) {
+            XCS_ERROR << "Register listener back failed."; 
+          }
         }
       } else if (zk_value != old_value) {
         XCS_INFO << "Content change from [" << old_value << "] to [" << zk_value
