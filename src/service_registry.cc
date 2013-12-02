@@ -19,7 +19,7 @@ ServiceRegistry::~ServiceRegistry() {
 /*  holder_thread_running_ = false;
   thread_.join();
 */
-  zkclient *instance = zkclient::open(NULL);
+  zkclient *instance = zkclient::open();
   
   instance->drop_listener(listener_);
   
@@ -42,7 +42,7 @@ int ServiceRegistry::PublishService(const string& service,
     return -1;
   }
   
-  zkclient *instance = zkclient::open(NULL);
+  zkclient *instance = zkclient::open();
 
   int rc = 0;
   
@@ -76,7 +76,7 @@ int ServiceRegistry::PublishService(const string& service,
 void ServiceRegistry::ContentChangeListener(const string& path,
                                             WatchEvent::type type)
 {
-  zkclient *instance = zkclient::open(NULL);
+  zkclient *instance = zkclient::open();
 
   if (type == WatchEvent::ZnodeDataChanged) {
     boost::mutex::scoped_lock lock(mutex_);
@@ -88,6 +88,7 @@ void ServiceRegistry::ContentChangeListener(const string& path,
         XCS_ERROR << "ContentChangeListener() failed: can not get node\n";
         rc = instance->exist(path);
         if (rc != ReturnCode::Ok) {
+          XCS_ERROR << "Node not exist @PATH=" << path;
           bool is_tmp = nodes_.find(path)->second.first;
           instance->create_node(path, old_value, is_tmp ? CreateMode::Ephemeral : CreateMode::Persistent);
         }

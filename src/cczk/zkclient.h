@@ -70,7 +70,7 @@ namespace cczk {
     void trigger_all_watcher(listener_map &);
     
   public  :
-    static zkclient* open(const zookeeper_config*/*config*/);
+    static zkclient* open(const zookeeper_config *config = NULL);
     
     void close();
     

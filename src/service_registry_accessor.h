@@ -18,7 +18,9 @@
 #include <string>
 
 namespace xcs {
-/*
+  
+using namespace cczk;
+  
 class ServiceRegistryAccessor {
  public:
   /** 
@@ -26,7 +28,7 @@ class ServiceRegistryAccessor {
    * @param version 版本号，默认为 1
    * @param stat 分区号，默认为 0
    * 
-   */ /*
+   */ 
   explicit ServiceRegistryAccessor(const std::string& serivceId,
                                    const std::string& version = "1",
                                    const std::string& stat = "0");
@@ -40,26 +42,25 @@ class ServiceRegistryAccessor {
    * @param listener 监听类. 若为空（NULL），则不进行监听
    *                 
    * return    0为成功
-   */ /*
-  int ListAndListen(std::vector<std::string>& children, Listener* listener = NULL);
+   */ 
+  int ListAndListen(std::vector<std::string>& children, boost::shared_ptr<watcher> listener);
 
   /**
    * 给stat下面的所有子节点的 内容变化 加监听
    *
    * @param listener 监听类，不能为空（NULL)
    * return  0为成功
-   */ /*
-  int ContentListen(Listener* listener);
+   */ 
+  int ContentListen(boost::shared_ptr<watcher> listener);
 
   /**
    * 获取某一个服务状态
    *
    * @param endpoint 服务地址(ip:port)，不能为空("")
    * @param[out] content 输出参数，存储服务状态信息
-   * @param[out] nodeStat zookeeper 节点的 Stat
    * return  0为成功
    */
-/*  int GetServiceStatus(const std::string& endpoint, std::string& content, Stat& nodeStat);
+  int GetServiceStatus(const std::string& endpoint, std::string& content);
 
   // 获取 service
   std::string service() {
@@ -82,9 +83,9 @@ class ServiceRegistryAccessor {
   std::string stat_;
 
   std::string service_path_;
-  std::set<Listener*> listener_set_;
+  std::set<boost::shared_ptr<watcher> > listener_set_;
 };
-*/
+
 }
 
 #endif 

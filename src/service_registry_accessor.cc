@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace xcs {
-/*
+
 ServiceRegistryAccessor::ServiceRegistryAccessor(const std::string& serivceId,
                                                  const std::string& version,
                                                  const std::string& stat) :
@@ -15,27 +15,26 @@ ServiceRegistryAccessor::ServiceRegistryAccessor(const std::string& serivceId,
 }
 
 ServiceRegistryAccessor::~ServiceRegistryAccessor() {
-  std::set<Listener*>::iterator set_it = listener_set_.begin();
-  ZooKeeperX* instance = ZooKeeperX::Instance();
+  std::set<boost::shared_ptr<watcher> >::iterator set_it = listener_set_.begin();
+  zkclient *instance = zkclient::open();
   for (; set_it != listener_set_.end(); ++set_it) {
-    instance->DropListener(*set_it);
+    instance->drop_listener(*set_it);
   }
 }
 
 int
 ServiceRegistryAccessor::ListAndListen(std::vector<std::string>& children,
-                                       Listener* listener) {
-  ZooKeeperX* instance = ZooKeeperX::Instance();
-
+                                       boost::shared_ptr<watcher> listener) {
+  zkclient *instance = zkclient::open();
   if (listener != NULL) {
     listener_set_.insert(listener);
-    if (instance->AddChildrenListener(service_path_, listener) !=
+    if (instance->add_listener(listener, service_path_) !=
         ReturnCode::Ok) {
       return -1;
     }
   }
 
-  if (instance->GetChildren(service_path_, children) != ReturnCode::Ok) {
+  if (instance->get_children_of_path(service_path_, children) != ReturnCode::Ok) {
     return -1;
   }
   
@@ -43,7 +42,7 @@ ServiceRegistryAccessor::ListAndListen(std::vector<std::string>& children,
 }
 
 int
-ServiceRegistryAccessor::ContentListen(Listener* listener) {
+ServiceRegistryAccessor::ContentListen(boost::shared_ptr<watcher> listener) {
   if (listener == NULL) {
     XCS_ERROR << "Null listener error!\n";
     return -1;
@@ -52,7 +51,7 @@ ServiceRegistryAccessor::ContentListen(Listener* listener) {
   listener_set_.insert(listener);
   
   std::vector<std::string> children;
-  if (ZooKeeperX::Instance()->GetChildren(service_path_,children) !=
+  if (zkclient::open()->get_children_of_path(service_path_,children) !=
       ReturnCode::Ok) {
     return -1;
   }
@@ -60,7 +59,7 @@ ServiceRegistryAccessor::ContentListen(Listener* listener) {
   std::vector<std::string>::iterator it = children.begin();
   for (; it != children.end(); ++it) {
     std::string endpoint = service_path_ + "/" + (*it);
-    ZooKeeperX::Instance()->AddNodeListener(endpoint, listener);
+    zkclient::open()->add_listener(listener, endpoint);
   }
 
   return 0;
@@ -68,15 +67,14 @@ ServiceRegistryAccessor::ContentListen(Listener* listener) {
 
 int
 ServiceRegistryAccessor::GetServiceStatus(const std::string &endpoint,
-                                          std::string& content,
-                                          Stat& nodeStat)
+                                          std::string& content)
 {
   std::string endpoint_path = service_path_ + "/" + endpoint;
-  if (ZooKeeperX::Instance()->Get(endpoint_path, content, nodeStat) !=
+  if (zkclient::open()->get_data_of_node(endpoint_path, content) !=
       ReturnCode::Ok) {
     return -1;
   }
 
   return 0;
-}*/
+}
 }
