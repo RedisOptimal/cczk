@@ -77,4 +77,5 @@ ServiceRegistryAccessor::GetServiceStatus(const std::string &endpoint,
 
   return 0;
 }
+
 }

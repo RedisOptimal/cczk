@@ -9,8 +9,8 @@
  *
  */
 
-#ifndef _XCS_SERVICE_REGISTRY_H_
-#define _XCS_SERVICE_REGISTRY_H_
+#ifndef XCS_SERVICE_REGISTRY_H_
+#define XCS_SERVICE_REGISTRY_H_
 
 #include "cczk/zkclient.h"
 
@@ -71,6 +71,6 @@ class ServiceRegistry {
 
 };
 
-}
+}  // namespace xcs
 
 #endif  // XCS_SERVICE_REGISTRY_H_

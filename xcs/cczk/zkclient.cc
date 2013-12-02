@@ -14,9 +14,10 @@ DEFINE_int32(refresh_timeval,
              300,
              "Default refresh timeval.");
 
-ZkClient::ZkClient(): zhandle_(NULL),
-            background_watcher_(true),
-            background_watcher_thread_(boost::bind(&ZkClient::WatcherLoop, this)) {
+ZkClient::ZkClient():
+  zhandle_(NULL),
+  background_watcher_(true),
+  background_watcher_thread_(boost::bind(&ZkClient::WatcherLoop, this)) {
   srand(getpid());
   Clear();
 }
@@ -32,10 +33,10 @@ void ZkClient::UpdateAuth() {
                             certification.c_str(),
                             certification.size(),
                             NULL,
-                            NULL
-                            );
+                            NULL);
       if (rc != ZOK) {
-        XCS_WARN << "[UPDATE AUTH]RETCODE=" << zerror(rc) << "@" << certification;
+        XCS_WARN << "[UPDATE AUTH]RETCODE=" << zerror(rc)
+        << "@" << certification;
       }
     }
   }
@@ -48,7 +49,7 @@ zhandle_t* ZkClient::CreateConnection() {
 #ifndef DEBUG
   sleep(rand() % 10);
 #endif
-  FILE *zk_log = fopen("zookeeper.out","w");
+  FILE *zk_log = fopen("zookeeper.out", "w");
   if (zk_log != NULL) {
     zoo_set_log_stream(zk_log);
   } else {
@@ -98,7 +99,7 @@ ZkClient::~ZkClient() {
   zookeeper_close(zhandle_);
   zhandle_ = NULL;
 }
-void ZkClient::TriggerAllWatcher(ZkClient::ListenerMap& listeners_) {
+void ZkClient::TriggerAllWatcher(const ZkClient::ListenerMap& listeners_) {
   ListenerMap::iterator it;
   for (it = listeners_.begin(); it != listeners_.end(); ++it) {
     ListenerMapKey _key = it->first;
@@ -111,14 +112,14 @@ void ZkClient::TriggerAllWatcher(ZkClient::ListenerMap& listeners_) {
                         WatchEvent::ZnodeChildrenChanged,
                         0,
                         jt->first.c_str(),
-                        (void*)(&_key));
+                        reinterpret_cast<void*>(&_key));
         }
         if (_key->watch_data()) {
           event_watcher(this->zhandle_,
                         WatchEvent::ZnodeDataChanged,
                         0,
                         jt->first.c_str(),
-                        (void*)(&_key));
+                        reinterpret_cast<void*>(&_key));
         }
       }
     }
@@ -162,13 +163,15 @@ void ZkClient::init_watcher(zhandle_t* zh, int type,
 }
 void ZkClient::event_watcher(zhandle_t* zh, int type,
       int state, const char* path, void* watcherCtx) {
-  boost::shared_ptr<watcher> *point = static_cast<boost::shared_ptr<watcher>* >(watcherCtx);
+  boost::shared_ptr<watcher> *point =
+    static_cast<boost::shared_ptr<watcher>* >(watcherCtx);
   ZkClient *instance = ZkClient::Open();
   string temp_path(path);
   WatchEvent::type temp_state;
   if (type != ZOO_SESSION_EVENT) {
     temp_state = static_cast<WatchEvent::type>(type);
-    if (temp_state == WatchEvent::ZnodeRemoved || temp_state == WatchEvent::ZnodeCreated) {
+    if (temp_state == WatchEvent::ZnodeRemoved ||
+        temp_state == WatchEvent::ZnodeCreated) {
       temp_state = WatchEvent::ZnodeDataChanged;
     }
   }
@@ -182,7 +185,8 @@ void ZkClient::event_watcher(zhandle_t* zh, int type,
   }
   ListenerMapValue::iterator jt;
   if (!it->first->is_live()) {  //  watcher die
-    if ((jt = it->second.find(temp_path)) != it->second.end()) {  //  watcher die and remove path
+    //  watcher die and remove path
+    if ((jt = it->second.find(temp_path)) != it->second.end()) {
       if (temp_state == WatchEvent::ZnodeDataChanged) {
         jt->second.first = false;
       } else if (temp_state == WatchEvent::ZnodeChildrenChanged) {
@@ -197,7 +201,8 @@ void ZkClient::event_watcher(zhandle_t* zh, int type,
     }
     return;
   } else {  //  watcher live
-    if ((jt = it->second.find(temp_path)) == it->second.end()) {  //  watcher path droped
+    //  watcher path droped
+    if ((jt = it->second.find(temp_path)) == it->second.end()) {
       return;
     }
   }
@@ -213,7 +218,7 @@ void ZkClient::event_watcher(zhandle_t* zh, int type,
     point->get()->get_listener()(temp_path, temp_state);
   }
 }
-ZkClient* ZkClient::Open(const zookeeper_config *config)  {
+ZkClient* ZkClient::Open(const ZookeeperConfig *config)  {
   static ZkClient instance;
   boost::mutex::scoped_lock lock(instance.singleton_mutex_);
   if (config == NULL) {
@@ -239,24 +244,27 @@ ZkClient* ZkClient::Open(const zookeeper_config *config)  {
   }
   return NULL;
 }
-ReturnCode::type ZkClient::GetChildrenOfPath(const string path, std::vector< string >& children) {
+ReturnCode::type ZkClient::GetChildrenOfPath(const string path,
+                                             std::vector< string >& children) {
   if (!this->IsAvailable()) {
     return ReturnCode::Error;
   }
   Stat stat;
   ReturnCode::type return_code;
   if ((return_code = Exist(path)) != ReturnCode::Ok) {
-    XCS_ERROR << "[GET CHILDREN OF PATH]RETCODE=" << ReturnCode::toString(return_code) << "@PATH=" << path;
+    XCS_ERROR << "[GET CHILDREN OF PATH]RETCODE=" <<
+    ReturnCode::toString(return_code) << "@PATH=" << path;
     return return_code;
   }
   String_vector string_vector;
   int rc = zoo_get_children(this->zhandle_, path.c_str(), 0, &string_vector);
   if (rc != ZOK) {
-    XCS_ERROR << "[GET CHILDREN OF PATH]RETCODE=" << ReturnCode::toString(return_code) << "@PATH=" << path;
+    XCS_ERROR << "[GET CHILDREN OF PATH]RETCODE=" <<
+    ReturnCode::toString(return_code) << "@PATH=" << path;
     return_code = static_cast<ReturnCode::type>(rc);
   } else {
     children.clear();
-    for (int i = 0;i < string_vector.count; ++i) {
+    for (int i = 0; i < string_vector.count; ++i) {
       children.push_back(string_vector.data[i]);
     }
   }
@@ -291,7 +299,8 @@ ReturnCode::type ZkClient::GetDataOfNode(const string path, string& value) {
   }
   ReturnCode::type return_code;
   if ((return_code = Exist(path)) != ReturnCode::Ok) {
-    XCS_ERROR << "[GET DATA OF NODE]RETCODE=" << ReturnCode::toString(return_code) << "@PATH=" << path;
+    XCS_ERROR << "[GET DATA OF NODE]RETCODE=" <<
+    ReturnCode::toString(return_code) << "@PATH=" << path;
     return return_code;
   }
   int length = FLAGS_xcs_zk_node_max_length;
@@ -316,13 +325,15 @@ ReturnCode::type ZkClient::Exist(const string path) {
     return ReturnCode::Error;
   }
   Stat stat;
-  int rc = zoo_exists(this->zhandle_, path.c_str(), 0, &stat); 
+  int rc = zoo_exists(this->zhandle_, path.c_str(), 0, &stat);
   if (rc != ZOK) {
     return static_cast<ReturnCode::type>(rc);
   }
   return ReturnCode::Ok;
 }
-ReturnCode::type ZkClient::CreateNode(const string path, const string& data, CreateMode::type mode) {
+ReturnCode::type ZkClient::CreateNode(const string path,
+                                      const string& data,
+                                      CreateMode::type mode) {
   if (!this->IsAvailable()) {
     return ReturnCode::Error;
   }
@@ -351,7 +362,8 @@ ReturnCode::type ZkClient::CreateNode(const string path, const string& data, Cre
   }
   if (rc != ZOK) {
     XCS_ERROR << "[CREATE NODE]RETCODE=" << zerror(rc)
-    << "@PATH=" << path << " DATA=" << data << " MODE=" << CreateMode::toString(mode);
+    << "@PATH=" << path << " DATA=" << data << " MODE="
+    << CreateMode::toString(mode);
     return static_cast<ReturnCode::type>(rc);
   }
   return ReturnCode::Ok;
@@ -366,7 +378,8 @@ ReturnCode::type ZkClient::DeleteNode(const string path) {
   }
   return ReturnCode::Ok;
 }
-ReturnCode::type ZkClient::AddListener(boost::shared_ptr< watcher > listener, string path) {
+ReturnCode::type ZkClient::AddListener(boost::shared_ptr< watcher > listener,
+                                       string path) {
   if (!this->IsAvailable()) {
     return ReturnCode::Error;
   }
@@ -376,12 +389,13 @@ ReturnCode::type ZkClient::AddListener(boost::shared_ptr< watcher > listener, st
   }
   boost::recursive_mutex::scoped_lock lock(background_mutex_);
   ListenerMap::iterator it;
-  //  add listener to local data-struct 
+  //  add listener to local data-struct
   if ((it = listeners_.find(listener)) != listeners_.end()) {  //  already in map
     if (!it->first->is_live()) {  //  removed in past
       return ReturnCode::Error;
     } else {
-      PreprotyOfPath _preproty = std::make_pair(listener->watch_data(), listener->watch_child());
+      PreprotyOfPath _preproty = std::make_pair(listener->watch_data(),
+                                                listener->watch_child());
       it->second.insert(std::make_pair(path, _preproty));
     }
   } else {  //  not in map
@@ -397,7 +411,7 @@ ReturnCode::type ZkClient::AddListener(boost::shared_ptr< watcher > listener, st
     int rc1 = zoo_wexists(zhandle_,
                         path.c_str(),
                         ZkClient::event_watcher,
-                        (void*)(&(it->first)),
+                        reinterpret_cast<void*>(&(it->first)),
                         &stat);
     if (rc1 != ZOK) {
       XCS_ERROR << "[ADD LISTENER]RETCODE=" << zerror(rc1) <<
@@ -410,10 +424,9 @@ ReturnCode::type ZkClient::AddListener(boost::shared_ptr< watcher > listener, st
     int rc2 = zoo_wget_children(zhandle_,
                                 path.c_str(),
                                 ZkClient::event_watcher,
-                                (void*)(&(it->first)),
+                                reinterpret_cast<void*>(&(it->first)),
                                 &string_vector);
     deallocate_String_vector(&string_vector);
-    
     if (rc2 != ZOK) {
       XCS_ERROR << "[ADD LISTENER]RETCODE=" << zerror(rc2) <<
       "@PATH=" << path << " Watcher=" << listener;
@@ -431,7 +444,7 @@ ReturnCode::type ZkClient::DropListenerWithPath(boost::shared_ptr< watcher > lis
   if ((it = listeners_.find(listener)) != listeners_.end()) {
     ListenerMapValue::iterator jt;
     if ((jt = it->second.find(path)) != it->second.end()) {
-      it->second.erase(jt); 
+      it->second.erase(jt);
     }
     return ReturnCode::Ok;
   } else {
@@ -445,7 +458,6 @@ ReturnCode::type ZkClient::DropListener(boost::shared_ptr< watcher > listener) {
     return ReturnCode::Error;
   }
   boost::recursive_mutex::scoped_lock lock(background_mutex_);
-  
   ListenerMap::iterator it;
   if ((it = listeners_.find(listener)) != listeners_.end()) {  //  already in map
     if (!it->first->is_live()) {  //  removed in past

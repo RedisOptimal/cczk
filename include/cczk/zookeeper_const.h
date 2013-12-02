@@ -1,4 +1,5 @@
 /**
+ * Copyright 2013 Renren.com
  * @file   zookeeper_const.h
  * @author liuyuan <yuan.liu1@renren-inc.com>
  * @author Zhe Yuan <zhe.yuan@renren-inc.com>
@@ -6,8 +7,8 @@
  *
  */
 
-#ifndef _CCZK_ZOOKEEPER_CONST_H_
-#define _CCZK_ZOOKEEPER_CONST_H_
+#ifndef INCLUDE_CCZK_ZOOKEEPER_CONST_H_
+#define INCLUDE_CCZK_ZOOKEEPER_CONST_H_
 #include <stdint.h>
 
 #include <string>
@@ -326,4 +327,4 @@ namespace OpCode {
 }  // namespace xcs
 
 
-#endif
+#endif  // INCLUDE_CCZK_ZOOKEEPER_CONST_H_

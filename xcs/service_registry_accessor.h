@@ -9,8 +9,8 @@
  *        注意：一个ServiceRegistryAccessor实例只能对应的获取一个服务版本
  *             若是想获取多个服务版本请创建多个实例
  */
-#ifndef _XCS_SERVICE_REGISTRY_ACCESSOR_H_
-#define _XCS_SERVICE_REGISTRY_ACCESSOR_H_
+#ifndef XCS_SERVICE_REGISTRY_ACCESSOR_H_
+#define XCS_SERVICE_REGISTRY_ACCESSOR_H_
 
 #include "zkclient.h"
 
@@ -88,4 +88,4 @@ class ServiceRegistryAccessor {
 
 }
 
-#endif 
+#endif  // XCS_SERVICE_REGISTRY_ACCESSOR_H_

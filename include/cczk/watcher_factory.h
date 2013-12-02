@@ -1,4 +1,5 @@
 /**
+ * Copyright 2013 Renren.com
  * @file   node_watcher.h
  * @author liuyuan <yuan.liu1@renren-inc.com>
  * @author Zhe Yuan <zhe.yuan@renren-inc.com>
@@ -8,28 +9,32 @@
  * 
  * 
  */
- 
-#ifndef _CCZK_WATCHER_FACTORY_H_
-#define _CCZK_WATCHER_FACTORY_H_
-#include <map>
-
+#ifndef INCLUDE_CCZK_WATCHER_FACTORY_H_
+#define INCLUDE_CCZK_WATCHER_FACTORY_H_
 #include <boost/concept_check.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include <watcher.h>
 #include <zkclient.h>
 
+#include <map>
+
 namespace xcs {
 namespace cczk {
-  class watcher_factory {
-  public  :
-    static boost::shared_ptr<watcher> get_watcher(watcher::Listener &listener, bool watch_data, bool watch_child) {
-      boost::shared_ptr<watcher> instance(new watcher(listener, watch_data, watch_child));
-      return instance;
-    }
-  };
+class WatcherFactory {
+ public  :
+  static boost::shared_ptr<watcher> get_watcher(const watcher::Listener &listener,
+                                                bool watch_data,
+                                                bool watch_child) {
+    boost::shared_ptr<watcher> instance(new watcher(listener,
+                                                    watch_data,
+                                                    watch_child));
+    return instance;
+  }
+};
+
 }  // namespace cczk
 }  // namespace xcs
 
 
-#endif
+#endif  // INCLUDE_CCZK_WATCHER_FACTORY_H_
