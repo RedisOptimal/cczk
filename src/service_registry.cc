@@ -43,8 +43,6 @@ int ServiceRegistry::PublishService(const string& service,
   }
   
   zkclient *instance = zkclient::open();
-
-  int rc = 0;
   
   string path = "/" + service + "/" + version + "/" + stat + "/" + node.name_;
 
@@ -52,7 +50,7 @@ int ServiceRegistry::PublishService(const string& service,
                                                   node.content_,
                                                   is_tmp ? CreateMode::Ephemeral : CreateMode::Persistent);
   if (zoo_rc != ReturnCode::Ok) {
-    rc = -2;
+    return -2;
   }
 
   if (is_tmp) {                         
@@ -66,11 +64,11 @@ int ServiceRegistry::PublishService(const string& service,
     zoo_rc = instance->add_listener(listener_, path);
     if (zoo_rc != ReturnCode::Ok) {
       XCS_ERROR << "[PublishService]" << ReturnCode::toString(zoo_rc) << "@PATH=" << path;
-      rc = -2;
+      return -3;
     }
   }
 
-  return rc;
+  return 0;
 }
 
 void ServiceRegistry::ContentChangeListener(const string& path,
@@ -90,7 +88,14 @@ void ServiceRegistry::ContentChangeListener(const string& path,
         if (rc != ReturnCode::Ok) {
           XCS_ERROR << "Node not exist @PATH=" << path;
           bool is_tmp = nodes_.find(path)->second.first;
-          instance->create_node(path, old_value, is_tmp ? CreateMode::Ephemeral : CreateMode::Persistent);
+          rc = instance->create_node(path, old_value, is_tmp ? CreateMode::Ephemeral : CreateMode::Persistent);
+          if (rc != ReturnCode::Ok) {
+            XCS_ERROR << "Create Node Failed"; 
+          }
+          //rc = instance->add_listener(listener_, path);
+          //if (rc != ReturnCode::Ok) {
+          //  XCS_ERROR << "Register listener back failed."; 
+          //}
         }
       } else if (zk_value != old_value) {
         XCS_INFO << "Content change from [" << old_value << "] to [" << zk_value

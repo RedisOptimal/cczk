@@ -10,7 +10,7 @@
 namespace xcs {
 namespace cczk {
 DEFINE_int32(xcs_zk_node_max_length, 1024*1024, "Default length limitation of zookeeper node's data is 1M.");
-DEFINE_int32(refresh_timeval, 20, "Default refresh timeval.");
+DEFINE_int32(refresh_timeval, 300, "Default refresh timeval.");
 
 zkclient::zkclient(): _zhandle(NULL),
             _background_watcher(true),

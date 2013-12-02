@@ -41,9 +41,9 @@ class ServiceRegistry {
   * @param node    发布的服务地址及其服务状态（value值）
   * @param is_tmp  标示发布的服务是临时的还是永久的，默认是临时的
   * return         0: 成功
-  *               -1: 失败，严重问题，参数不全
-  *               -2: 失败，但是发布节点已经加入了后台线程，
-  *                         会在随后Zookeeper连接可用时恢复
+  *               -1: 失败，严重问题，参数不全,ZK链接问题
+  *               -2: 失败，注册失败，需要重新注册
+  *               -3: 注册节点成功，临时节点的watcher注册失败
   */
   int PublishService(const std::string& service,
                      const std::string& version,
@@ -61,11 +61,6 @@ class ServiceRegistry {
    * @param type
    */
   void ContentChangeListener(const std::string& path, WatchEvent::type type);
-
-  /**
-   * 对于临时节点，可能在超时之后消失，需要内部线程进行验证和追加注册
-   */
-  void Holder();
 
  private:
   ///< Map(Path, Value)

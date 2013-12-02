@@ -102,6 +102,10 @@ TARGET_LINK_LIBRARIES(xcs_static cczk_static ${ZOOKEEPER_LIBRARY}
 TARGET_LINK_LIBRARIES(xcs_dynamic cczk_dynamic ${ZOOKEEPER_LIBRARY}
   ${GLOG_LIBRARY} ${GFLAGS_LIBRARY} pthread boost_thread boost_system)
 
+SET_TARGET_PROPERTIES(xcs_dynamic PROPERTIES VERSION 1.0 SOVERSION 1)
+SET_TARGET_PROPERTIES(xcs_dynamic PROPERTIES OUTPUT_NAME xcs)
+SET_TARGET_PROPERTIES(xcs_static PROPERTIES OUTPUT_NAME xcs)
+
 ##############################For test below###############################
 IF (${CMAKE_BUILD_TYPE} MATCHES "DEBUG")
   FIND_PACKAGE(GTest REQUIRED)
@@ -121,7 +125,7 @@ IF (${CMAKE_BUILD_TYPE} MATCHES "DEBUG")
   ## Unit test start here
   SET(TestArgs "--log_dir=." "--zookeeper_log_name=zookeeper.log")
   ADD_EXECUTABLE(cczk_test ${TESTS})
-  TARGET_LINK_LIBRARIES(cczk_test cczk_static ${GTEST_LIBRARY})
+  TARGET_LINK_LIBRARIES(cczk_test xcs_static cczk_static ${GTEST_LIBRARY})
   
   GTEST_ADD_TESTS(cczk_test "" ${TESTS})
   SET(CTEST_MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --quiet --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=100 --verbose --demangle=yes")
