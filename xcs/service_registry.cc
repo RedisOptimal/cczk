@@ -19,14 +19,14 @@ ServiceRegistry::~ServiceRegistry() {
 /*  holder_thread_running_ = false;
   thread_.join();
 */
-  zkclient *instance = zkclient::open();
+  ZkClient *instance = ZkClient::Open();
   
-  instance->drop_listener(listener_);
+  instance->DropListener(listener_);
   
   std::map<string, std::pair<bool, string> >::iterator map_it;
   boost::mutex::scoped_lock lock(mutex_);
   for (map_it = nodes_.begin(); map_it != nodes_.end(); ++map_it) {
-    instance->delete_node(map_it->first);
+    instance->DeleteNode(map_it->first);
   }
 }
 
@@ -42,11 +42,11 @@ int ServiceRegistry::PublishService(const string& service,
     return -1;
   }
   
-  zkclient *instance = zkclient::open();
+  ZkClient *instance = ZkClient::Open();
   
   string path = "/" + service + "/" + version + "/" + stat + "/" + node.name_;
 
-  ReturnCode::type zoo_rc = instance->create_node(path,
+  ReturnCode::type zoo_rc = instance->CreateNode(path,
                                                   node.content_,
                                                   is_tmp ? CreateMode::Ephemeral : CreateMode::Persistent);
   if (zoo_rc != ReturnCode::Ok) {
@@ -61,7 +61,7 @@ int ServiceRegistry::PublishService(const string& service,
     // Idle for 100ms to make sure the node is created
     usleep(100000);
     
-    zoo_rc = instance->add_listener(listener_, path);
+    zoo_rc = instance->AddListener(listener_, path);
     if (zoo_rc != ReturnCode::Ok) {
       XCS_ERROR << "[PublishService]" << ReturnCode::toString(zoo_rc) << "@PATH=" << path;
       return -3;
@@ -74,25 +74,25 @@ int ServiceRegistry::PublishService(const string& service,
 void ServiceRegistry::ContentChangeListener(const string& path,
                                             WatchEvent::type type)
 {
-  zkclient *instance = zkclient::open();
+  ZkClient *instance = ZkClient::Open();
 
   if (type == WatchEvent::ZnodeDataChanged) {
     boost::mutex::scoped_lock lock(mutex_);
     if (nodes_.find(path) != nodes_.end()) {
       string old_value = nodes_.find(path)->second.second;
       string zk_value;
-      ReturnCode::type rc = instance->get_data_of_node(path, zk_value);
+      ReturnCode::type rc = instance->GetDataOfNode(path, zk_value);
       if (rc != ReturnCode::Ok) {
         XCS_ERROR << "ContentChangeListener() failed: can not get node\n";
-        rc = instance->exist(path);
+        rc = instance->Exist(path);
         if (rc != ReturnCode::Ok) {
           XCS_ERROR << "Node not exist @PATH=" << path;
           bool is_tmp = nodes_.find(path)->second.first;
-          rc = instance->create_node(path, old_value, is_tmp ? CreateMode::Ephemeral : CreateMode::Persistent);
+          rc = instance->CreateNode(path, old_value, is_tmp ? CreateMode::Ephemeral : CreateMode::Persistent);
           if (rc != ReturnCode::Ok) {
             XCS_ERROR << "Create Node Failed"; 
           }
-          rc = instance->add_listener(listener_, path);
+          rc = instance->AddListener(listener_, path);
           if (rc != ReturnCode::Ok) {
             XCS_ERROR << "Register listener back failed."; 
           }

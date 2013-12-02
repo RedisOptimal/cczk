@@ -1,4 +1,5 @@
 /**
+ * Copyright 2013 <Copyright renren.com>
  * @file   logging.h
  * @author liuyuan <yuan.liu1@renren-inc.com>
  * @author Zhe Yuan <zhe.yuan@renren-inc.com>
@@ -9,8 +10,8 @@
  * 
  */
 
-#ifndef _CCZK_LOGGING_H_
-#define _CCZK_LOGGING_H_
+#ifndef XCS_LOGGING_H_
+#define XCS_LOGGING_H_
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>

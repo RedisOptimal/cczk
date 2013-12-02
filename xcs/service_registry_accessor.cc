@@ -16,25 +16,25 @@ ServiceRegistryAccessor::ServiceRegistryAccessor(const std::string& serivceId,
 
 ServiceRegistryAccessor::~ServiceRegistryAccessor() {
   std::set<boost::shared_ptr<watcher> >::iterator set_it = listener_set_.begin();
-  zkclient *instance = zkclient::open();
+  ZkClient *instance = ZkClient::Open();
   for (; set_it != listener_set_.end(); ++set_it) {
-    instance->drop_listener(*set_it);
+    instance->DropListener(*set_it);
   }
 }
 
 int
 ServiceRegistryAccessor::ListAndListen(std::vector<std::string>& children,
                                        boost::shared_ptr<watcher> listener) {
-  zkclient *instance = zkclient::open();
+  ZkClient *instance = ZkClient::Open();
   if (listener != NULL) {
     listener_set_.insert(listener);
-    if (instance->add_listener(listener, service_path_) !=
+    if (instance->AddListener(listener, service_path_) !=
         ReturnCode::Ok) {
       return -1;
     }
   }
 
-  if (instance->get_children_of_path(service_path_, children) != ReturnCode::Ok) {
+  if (instance->GetChildrenOfPath(service_path_, children) != ReturnCode::Ok) {
     return -1;
   }
   
@@ -51,7 +51,7 @@ ServiceRegistryAccessor::ContentListen(boost::shared_ptr<watcher> listener) {
   listener_set_.insert(listener);
   
   std::vector<std::string> children;
-  if (zkclient::open()->get_children_of_path(service_path_,children) !=
+  if (ZkClient::Open()->GetChildrenOfPath(service_path_,children) !=
       ReturnCode::Ok) {
     return -1;
   }
@@ -59,7 +59,7 @@ ServiceRegistryAccessor::ContentListen(boost::shared_ptr<watcher> listener) {
   std::vector<std::string>::iterator it = children.begin();
   for (; it != children.end(); ++it) {
     std::string endpoint = service_path_ + "/" + (*it);
-    zkclient::open()->add_listener(listener, endpoint);
+    ZkClient::Open()->AddListener(listener, endpoint);
   }
 
   return 0;
@@ -70,7 +70,7 @@ ServiceRegistryAccessor::GetServiceStatus(const std::string &endpoint,
                                           std::string& content)
 {
   std::string endpoint_path = service_path_ + "/" + endpoint;
-  if (zkclient::open()->get_data_of_node(endpoint_path, content) !=
+  if (ZkClient::Open()->GetDataOfNode(endpoint_path, content) !=
       ReturnCode::Ok) {
     return -1;
   }
