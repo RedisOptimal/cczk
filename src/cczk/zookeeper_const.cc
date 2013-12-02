@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iostream>
 
+namespace xcs {
 namespace cczk {
 
 namespace ReturnCode {
@@ -151,4 +152,5 @@ const std::string toString(int32_t permType) {
 
 }
 
-} // namespace cczk
+}  // namespace cczk
+}  // namespace xcs

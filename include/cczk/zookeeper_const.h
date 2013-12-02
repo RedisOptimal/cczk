@@ -12,6 +12,7 @@
 
 #include <string>
 
+namespace xcs {
 namespace cczk {
 
 /**
@@ -321,6 +322,8 @@ namespace OpCode {
   const std::string toString(OpCode::type code);
 };
 
-} // namespace cczk
+}  // namespace cczk
+}  // namespace xcs
+
 
 #endif

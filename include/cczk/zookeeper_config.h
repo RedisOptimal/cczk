@@ -18,6 +18,7 @@
 
 #include <gflags/gflags.h>
 
+namespace xcs {
 namespace cczk {
 DECLARE_string(xcs_conf);
 using std::string;
@@ -61,6 +62,6 @@ using std::pair;
   };
   
 }  // namespace cczk
-
+}  // namespace xcs
 
 #endif

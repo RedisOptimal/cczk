@@ -20,6 +20,7 @@
 
 #include <zookeeper_const.h>
 
+namespace xcs {
 namespace cczk {
   using boost::noncopyable;
   class watcher : noncopyable {
@@ -66,6 +67,6 @@ namespace cczk {
     }
   };
 } // namespace cczk
-
+} // namespace xcs
 
 #endif

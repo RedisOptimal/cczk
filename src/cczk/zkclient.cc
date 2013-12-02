@@ -7,6 +7,7 @@
 
 #include <watcher.h>
 
+namespace xcs {
 namespace cczk {
 DEFINE_int32(xcs_zk_node_max_length, 1024*1024, "Default length limitation of zookeeper node's data is 1M.");
 DEFINE_int32(refresh_timeval, 20, "Default refresh timeval.");
@@ -344,7 +345,7 @@ ReturnCode::type zkclient::exist(const string path) {
   return ReturnCode::Ok;
 }
  
-ReturnCode::type zkclient::create_node(const string path, string& data, CreateMode::type mode) {
+ReturnCode::type zkclient::create_node(const string path, const string& data, CreateMode::type mode) {
   if (!this->is_avaiable()) {
     return ReturnCode::Error;
   }
@@ -489,4 +490,5 @@ ReturnCode::type zkclient::drop_listener(boost::shared_ptr< watcher > listener) 
   return ReturnCode::Error;
 }
 
-}  //namespace cczk
+}  // namespace cczk
+}  // namespace xcs

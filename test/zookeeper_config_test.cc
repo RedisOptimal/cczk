@@ -3,7 +3,7 @@
 #include <fstream>
 
 TEST(ZOOKEEPER_CONFIG, CONSTRUCTION) {
-  using namespace cczk;
+  using namespace xcs::cczk;
   zookeeper_config config;
   zookeeper_config config2("cluster", 3000, "/root");
   zookeeper_config config3("cluster", 3000, "root");
@@ -17,7 +17,7 @@ TEST(ZOOKEEPER_CONFIG, CONSTRUCTION) {
 }
 
 TEST(ZOOKEEPER_CONFIG, LOAD_FROM_FILE) {
-  using namespace cczk;
+  using namespace xcs::cczk;
   using namespace std;
   ofstream fout("zk.conf");
   fout << "cluster=localhost:2181" << endl;

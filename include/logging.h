@@ -16,7 +16,7 @@
 #include <glog/logging.h>
 #include <glog/raw_logging.h>
 
-namespace cczk {
+namespace xcs {
 
 /* Logging with inner mutex  */
 // Debug mode, not present in release build
@@ -43,6 +43,6 @@ static void set_xcs_glog_file(const char* log_name) {
   google::InitGoogleLogging(log_name);
 }
 
-}  // namespace cczk
+}  // namespace xcs
 
 #endif /* _XCS_LOGGING_H_ */

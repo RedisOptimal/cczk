@@ -19,6 +19,7 @@
 #include <watcher.h>
 #include <zkclient.h>
 
+namespace xcs {
 namespace cczk {
   class watcher_factory {
   public  :
@@ -28,5 +29,7 @@ namespace cczk {
     }
   };
 }  // namespace cczk
+}  // namespace xcs
+
 
 #endif

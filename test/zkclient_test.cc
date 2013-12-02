@@ -6,7 +6,7 @@
 
 
 TEST(ZKCLIENT, OPEN) {
-  using namespace cczk;
+  using namespace xcs::cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
   ASSERT_TRUE(tmp != NULL);
@@ -35,7 +35,7 @@ TEST(ZKCLIENT, OPEN) {
 }
 
 TEST(ZKCLIENT, CLOSE) {
-  using namespace cczk;
+  using namespace xcs::cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
   ASSERT_TRUE(tmp != NULL);
@@ -44,11 +44,11 @@ TEST(ZKCLIENT, CLOSE) {
 }
 
 TEST(ZKCLIENT, CLEAR) {
-  using namespace cczk;
+  using namespace xcs::cczk;
 }
 
 TEST(ZKCLIENT, IS_AVALIABLE) {
-  using namespace cczk;
+  using namespace xcs::cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
   ASSERT_TRUE(tmp != NULL);
@@ -59,7 +59,7 @@ TEST(ZKCLIENT, IS_AVALIABLE) {
 }
 
 TEST(ZKCLIENT, GET_CHILDREN_OF_PATH) {
-  using namespace cczk;
+  using namespace xcs::cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
   ASSERT_TRUE(tmp != NULL);
@@ -93,7 +93,7 @@ TEST(ZKCLIENT, GET_CHILDREN_OF_PATH) {
 }
 
 TEST(ZKCLIENT, SET_DATA_OF_NODE) {
-  using namespace cczk;
+  using namespace xcs::cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
   ASSERT_TRUE(tmp != NULL);
@@ -120,7 +120,7 @@ TEST(ZKCLIENT, SET_DATA_OF_NODE) {
 }
 
 TEST(ZKCLIENT, GET_DATA_OF_NODE) {
-  using namespace cczk;
+  using namespace xcs::cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
   ASSERT_TRUE(tmp != NULL);
@@ -135,7 +135,7 @@ TEST(ZKCLIENT, GET_DATA_OF_NODE) {
 }
 
 TEST(ZKCLIENT, CREATE_NODE) {
-  using namespace cczk;
+  using namespace xcs::cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
   ASSERT_TRUE(tmp != NULL);
@@ -178,7 +178,7 @@ TEST(ZKCLIENT, CREATE_NODE) {
 
 
 TEST(ZKCLIENT, DELETE_NODE) {
-  using namespace cczk;
+  using namespace xcs::cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
   ASSERT_TRUE(tmp != NULL);
@@ -188,7 +188,7 @@ TEST(ZKCLIENT, DELETE_NODE) {
 }
 
 TEST(ZKCLIENT, EXIST) {
-  using namespace cczk;
+  using namespace xcs::cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
   ASSERT_TRUE(tmp != NULL);
@@ -203,21 +203,22 @@ public:
     _counter = 0;
   }
   
-  void stupid_listener(const std::string &path, cczk::WatchEvent::type type) {
+  void stupid_listener(const std::string &path, xcs::cczk::WatchEvent::type type) {
+    using namespace xcs::cczk;
     _path = path;
     _watch_type = type;
     _counter++;
     fout << "Stupid Listener is running on [ path: " << path << "; Counter : " <<
-    _counter << "; Type : " << cczk::WatchEvent::toString(type) << " ]\n";
-    cczk::zkclient *tmp = cczk::zkclient::open(NULL);
-    if (type == cczk::WatchEvent::ZnodeChildrenChanged) {
+    _counter << "; Type : " << xcs::cczk::WatchEvent::toString(type) << " ]\n";
+    zkclient *tmp = zkclient::open(NULL);
+    if (type == WatchEvent::ZnodeChildrenChanged) {
       std::vector<std::string> ret;
-      cczk::ReturnCode::type ret_code = tmp->get_children_of_path(path, ret);
-      fout << "Counter of Children : " << ret.size() << " RETURN_CODE=" << cczk::ReturnCode::toString(ret_code) << std::endl;
+      ReturnCode::type ret_code = tmp->get_children_of_path(path, ret);
+      fout << "Counter of Children : " << ret.size() << " RETURN_CODE=" << ReturnCode::toString(ret_code) << std::endl;
     } else {
       std::string ret;
-      cczk::ReturnCode::type ret_code = tmp->get_data_of_node(path, ret);
-      fout << "Data of Node : " << ret << "RETURN_CODE=" << cczk::ReturnCode::toString(ret_code) << std::endl;
+      ReturnCode::type ret_code = tmp->get_data_of_node(path, ret);
+      fout << "Data of Node : " << ret << "RETURN_CODE=" << ReturnCode::toString(ret_code) << std::endl;
     }
     fout.flush();
   }
@@ -227,12 +228,12 @@ public:
   }
   std::ofstream fout;
   std::string _path;
-  cczk::WatchEvent::type _watch_type;
+  xcs::cczk::WatchEvent::type _watch_type;
   int _counter;
 };
 
 TEST(ZKCLIENT, ADD_LISTENER) {
-  using namespace cczk;
+  using namespace xcs::cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
   ASSERT_TRUE(tmp != NULL);
@@ -269,7 +270,7 @@ TEST(ZKCLIENT, ADD_LISTENER) {
 
 
 TEST(ZKCLIENT, DROP_LISTENER) {
-  using namespace cczk;
+  using namespace xcs::cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
   ASSERT_TRUE(tmp != NULL);
@@ -317,7 +318,7 @@ TEST(ZKCLIENT, DROP_LISTENER) {
 
 
 TEST(ZKCLIENT, DROP_LISTENER_WITH_PATH) {
-  using namespace cczk;
+  using namespace xcs::cczk;
   zookeeper_config config("localhost:2181", 3000, "/test");
   zkclient *tmp = zkclient::open(&config);
   ASSERT_TRUE(tmp != NULL);

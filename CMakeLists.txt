@@ -40,7 +40,9 @@ SET(CMAKE_CXX_FLAGS_DEBUG "-O0 -fprofile-arcs -ftest-coverage -DDEBUG")
 SET(CMAKE_CXX_FLAGS_RELEASE "-O2 -finline-limit=1000 -DNDEBUG")
 
 INCLUDE_DIRECTORIES(include/)
+INCLUDE_DIRECTORIES(include/cczk/)
 INCLUDE_DIRECTORIES(src/)
+INCLUDE_DIRECTORIES(src/cczk/)
 
 # Boost
 FIND_PACKAGE(Boost REQUIRED)
@@ -76,10 +78,10 @@ IF (NOT GFLAGS_LIBRARY)
   ENDIF(NOT GFLAGS_LIBRARY)
 ENDIF(NOT GFLAGS_LIBRARY)
 
-FILE(GLOB SRC src/*.cc )
+FILE(GLOB CCZK_SRC src/cczk/*.cc )
 
-ADD_LIBRARY(cczk_static STATIC ${SRC})
-ADD_LIBRARY(cczk_dynamic SHARED ${SRC})
+ADD_LIBRARY(cczk_static STATIC ${CCZK_SRC})
+ADD_LIBRARY(cczk_dynamic SHARED ${CCZK_SRC})
 
 TARGET_LINK_LIBRARIES(cczk_static ${ZOOKEEPER_LIBRARY} 
   ${GLOG_LIBRARY} ${GFLAGS_LIBRARY} pthread boost_thread boost_system)
@@ -90,6 +92,15 @@ SET_TARGET_PROPERTIES(cczk_dynamic PROPERTIES VERSION 1.0 SOVERSION 1)
 SET_TARGET_PROPERTIES(cczk_dynamic PROPERTIES OUTPUT_NAME cczk)
 SET_TARGET_PROPERTIES(cczk_static PROPERTIES OUTPUT_NAME cczk)
 
+FILE(GLOB XCS_SRC src/*.cc)
+
+ADD_LIBRARY(xcs_static STATIC ${XCS_SRC})
+ADD_LIBRARY(xcs_dynamic SHARED ${XCS_SRC})
+
+TARGET_LINK_LIBRARIES(xcs_static cczk_static ${ZOOKEEPER_LIBRARY} 
+  ${GLOG_LIBRARY} ${GFLAGS_LIBRARY} pthread boost_thread boost_system)
+TARGET_LINK_LIBRARIES(xcs_dynamic cczk_dynamic ${ZOOKEEPER_LIBRARY}
+  ${GLOG_LIBRARY} ${GFLAGS_LIBRARY} pthread boost_thread boost_system)
 
 ##############################For test below###############################
 IF (${CMAKE_BUILD_TYPE} MATCHES "DEBUG")
