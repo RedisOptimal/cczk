@@ -359,5 +359,5 @@ TEST(ZKCLIENT, DROP_LISTENER_WITH_PATH) {
   ASSERT_EQ(ret, ReturnCode::Ok);
   sleep(2);
   tmp->Close();  
-  
+  tmp->Clear(); 
 }
