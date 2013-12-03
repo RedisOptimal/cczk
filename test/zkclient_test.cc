@@ -196,11 +196,11 @@ TEST(ZKCLIENT, EXIST) {
   
   ReturnCode::type ret;
   string null_str = "";
-  ret = tmp->create_node("/abc", null_str, CreateMode::Ephemeral);
+  ret = tmp->CreateNode("/abc", null_str, CreateMode::Ephemeral);
   ASSERT_EQ(ret, ReturnCode::Ok);
-  ret = tmp->exist("/abc");
+  ret = tmp->Exist("/abc");
   ASSERT_EQ(ret, ReturnCode::Ok);
-  ret = tmp->exist("/test/abc");
+  ret = tmp->Exist("/test/abc");
   ASSERT_EQ(ret, ReturnCode::NoNode);
 }
 
@@ -274,6 +274,7 @@ TEST(ZKCLIENT, ADD_LISTENER) {
   ASSERT_EQ(ret, ReturnCode::Ok);
   sleep(2);
   tmp->Close();
+  tmp->Clear();
 }
 
 
@@ -321,7 +322,7 @@ TEST(ZKCLIENT, DROP_LISTENER) {
   ASSERT_EQ(ret, ReturnCode::Ok);
   sleep(2);
   tmp->Close();  
-  
+  tmp->Clear();
 }
 
 
