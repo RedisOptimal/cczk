@@ -3,10 +3,10 @@
 #include <fstream>
 
 TEST(ZOOKEEPER_CONFIG, CONSTRUCTION) {
-  using namespace cczk;
-  zookeeper_config config;
-  zookeeper_config config2("cluster", 3000, "/root");
-  zookeeper_config config3("cluster", 3000, "root");
+  using namespace xcs::cczk;
+  ZookeeperConfig config;
+  ZookeeperConfig config2("cluster", 3000, "/root");
+  ZookeeperConfig config3("cluster", 3000, "root");
   ASSERT_EQ(config.get_host(), "");
   ASSERT_EQ(config.get_root(), "");
   ASSERT_EQ(config.get_session_timeout(), 0);
@@ -17,7 +17,7 @@ TEST(ZOOKEEPER_CONFIG, CONSTRUCTION) {
 }
 
 TEST(ZOOKEEPER_CONFIG, LOAD_FROM_FILE) {
-  using namespace cczk;
+  using namespace xcs::cczk;
   using namespace std;
   ofstream fout("zk.conf");
   fout << "cluster=localhost:2181" << endl;
@@ -28,8 +28,8 @@ TEST(ZOOKEEPER_CONFIG, LOAD_FROM_FILE) {
   fout << "auth=foo:bar,test:test" << endl;
   fout.flush();
   fout.close();
-  zookeeper_config config;
-  config.load_from_file("zk.conf");
+  ZookeeperConfig config;
+  config.LoadFromFile("zk.conf");
   ASSERT_EQ(config.get_host(), "localhost:2181");
   ASSERT_EQ(config.get_root(), "test");
   ASSERT_EQ(config.get_session_timeout(), 3000);

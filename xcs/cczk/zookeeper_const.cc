@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iostream>
 
+namespace xcs {
 namespace cczk {
 
 namespace ReturnCode {
@@ -60,6 +61,10 @@ const std::string toString(type rc) {
       return "InvalidState";
     case Error:
       return "Error";
+    case ZkClosing:
+      return "ZookeeperClosing";
+    case ZkNothing:
+      return "ZookeeperNothing";
   }
   return str(boost::format("UnknownError(%d)") % rc);
 }
@@ -147,4 +152,5 @@ const std::string toString(int32_t permType) {
 
 }
 
-} // namespace cczk
+}  // namespace cczk
+}  // namespace xcs

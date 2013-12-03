@@ -1,23 +1,28 @@
+/**
+ * Copyright 2013 Renren.com
+ */
 #include <zookeeper_config.h>
 
+#include <stdlib.h>
 #include <string.h>
-
-#include <map>
-#include <fstream>
 
 #include <logging.h>
 
+#include <fstream>
+#include <map>
+
+namespace xcs {
 namespace cczk {
 DEFINE_string(xcs_conf, "./zk.conf", "The path of zk.conf");
 
-zookeeper_config::zookeeper_config() {
+ZookeeperConfig::ZookeeperConfig() {
   set_host("");
   set_session_timeout(0);
   set_root("");
   auth.clear();
 }
 
-zookeeper_config::zookeeper_config(const string host,
+ZookeeperConfig::ZookeeperConfig(const string host,
                                  const int session_timeout,
                                  const string root) {
   set_host(host);
@@ -40,7 +45,7 @@ static string Trim(string str) {
   else  return str.substr(i, j - i + 1);
 }
 
-void zookeeper_config::load_from_file(const string file_path) {
+void ZookeeperConfig::LoadFromFile(const string file_path) {
   std::ifstream cfg(file_path.c_str());
   if (!cfg.is_open()) {
     XCS_FATAL << "XCS: Failed to open property configure file:"
@@ -97,41 +102,42 @@ void zookeeper_config::load_from_file(const string file_path) {
   }
 }
 
-string zookeeper_config::get_host() {
-  return host;
+string ZookeeperConfig::get_host() {
+  return host_;
 }
 
-void zookeeper_config::set_host(const string host) {
-  this->host = host;
+void ZookeeperConfig::set_host(const string host) {
+  this->host_ = host;
 }
 
-int zookeeper_config::get_session_timeout() {
-  return session_timeout;
+int ZookeeperConfig::get_session_timeout() {
+  return session_timeout_;
 }
 
-void zookeeper_config::set_session_timeout(const int session_timeout) {
-  this->session_timeout = session_timeout;
+void ZookeeperConfig::set_session_timeout(const int session_timeout) {
+  this->session_timeout_ = session_timeout;
 }
 
-string zookeeper_config::get_root() {
-  return root;
+string ZookeeperConfig::get_root() {
+  return root_;
 }
 
-void zookeeper_config::set_root(const string root) {
-  this->root = root;
-  if (this->root.find_first_of("/") == 0) {
-    this->root = this->root.substr(1);
+void ZookeeperConfig::set_root(const string root) {
+  this->root_ = root;
+  if (this->root_.find_first_of("/") == 0) {
+    this->root_ = this->root_.substr(1);
   }
 }
 
-void zookeeper_config::add_auth(pair<string, string> auth_pair) {
+void ZookeeperConfig::add_auth(pair<string, string> auth_pair) {
   auth.insert(auth_pair);
 }
 
-void zookeeper_config::remove_auth(string username) {
+void ZookeeperConfig::remove_auth(string username) {
   if (auth.find(username) != auth.end()) {
     auth.erase(username);
   } 
 }
 
-}  //namespace cczk
+}  // namespace cczk
+}  // namespace xcs

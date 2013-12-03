@@ -15,8 +15,8 @@ BASE_ENV=~/env
 
 cmake -DCMAKE_BUILD_TYPE=DEBUG -DCMAKE_PREFIX_PATH=$BASE_ENV ..
 make
-ctest -D Experimental
-ctest -D ExperimentalMemCheck
+#ctest -D Experimental
+#ctest -D ExperimentalMemCheck
 #ctest -D ExperimentalSubmit
 
 echo "###############"

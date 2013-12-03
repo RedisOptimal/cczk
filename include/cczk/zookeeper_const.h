@@ -1,4 +1,5 @@
 /**
+ * Copyright 2013 Renren.com
  * @file   zookeeper_const.h
  * @author liuyuan <yuan.liu1@renren-inc.com>
  * @author Zhe Yuan <zhe.yuan@renren-inc.com>
@@ -6,12 +7,13 @@
  *
  */
 
-#ifndef _CCZK_ZOOKEEPER_CONST_H_
-#define _CCZK_ZOOKEEPER_CONST_H_
+#ifndef INCLUDE_CCZK_ZOOKEEPER_CONST_H_
+#define INCLUDE_CCZK_ZOOKEEPER_CONST_H_
 #include <stdint.h>
 
 #include <string>
 
+namespace xcs {
 namespace cczk {
 
 /**
@@ -91,6 +93,12 @@ namespace ReturnCode {
 
     /** Client authentication failed */
     AuthFailed = -115,
+    
+    /** Zookeeper is closing*/
+    ZkClosing = -116,
+    
+    /** (not error) no server responses to process */
+    ZkNothing = -117,
 
     /** Session moved to another server, so operation is ignored */
     SessionMoved = -118,
@@ -315,6 +323,8 @@ namespace OpCode {
   const std::string toString(OpCode::type code);
 };
 
-} // namespace cczk
+}  // namespace cczk
+}  // namespace xcs
 
-#endif
+
+#endif  // INCLUDE_CCZK_ZOOKEEPER_CONST_H_
