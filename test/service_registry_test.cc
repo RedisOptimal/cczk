@@ -21,14 +21,14 @@ TEST(SERVICE_REGISTRY, SERVICE_REGISTRY) {
   int rc;
   ServiceRegistry *registry = new ServiceRegistry();
   std::string serviceid = "test.service";
-  std::string version = "0";
-  std::string stat = "1";
+  std::string version = "1";
+  std::string stat = "0";
   rc = registry->PublishService(serviceid, version, stat, node1);
   ASSERT_TRUE(rc == -2);
   
   cczk::ZookeeperConfig config;
-  config.set_host("localhost:2181");
-  config.set_root("/test");
+  config.set_host("xcszookeepertest.n.xiaonei.com:2181");
+  config.set_root("/xcs-test");
   config.set_session_timeout(4000);
   cczk::ZkClient *tmp = cczk::ZkClient::Open(&config);
   

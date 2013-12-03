@@ -7,7 +7,7 @@
 
 TEST(ZKCLIENT, OPEN) {
   using namespace xcs::cczk;
-  ZookeeperConfig config("localhost:2181", 3000, "/test");
+  ZookeeperConfig config("xcszookeepertest.n.xiaonei.com:2181", 3000, "/xcs-test");
   ZkClient *tmp = ZkClient::Open(&config);
   ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->IsAvailable());
@@ -16,7 +16,7 @@ TEST(ZKCLIENT, OPEN) {
   tmp = ZkClient::Open(&config);
   ASSERT_TRUE(tmp == NULL);
   
-  config.set_host("localhost:2181");
+  config.set_host("xcszookeepertest.n.xiaonei.com:2181");
   config.set_root("");
   tmp = ZkClient::Open(&config);
   ASSERT_TRUE(tmp != NULL);
@@ -36,7 +36,7 @@ TEST(ZKCLIENT, OPEN) {
 
 TEST(ZKCLIENT, CLOSE) {
   using namespace xcs::cczk;
-  ZookeeperConfig config("localhost:2181", 3000, "/test");
+  ZookeeperConfig config("xcszookeepertest.n.xiaonei.com:2181", 3000, "/xcs-test");
   ZkClient *tmp = ZkClient::Open(&config);
   ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->IsAvailable());
@@ -49,7 +49,7 @@ TEST(ZKCLIENT, CLEAR) {
 
 TEST(ZKCLIENT, IS_AVALIABLE) {
   using namespace xcs::cczk;
-  ZookeeperConfig config("localhost:2181", 3000, "/test");
+  ZookeeperConfig config("xcszookeepertest.n.xiaonei.com:2181", 3000, "/xcs-test");
   ZkClient *tmp = ZkClient::Open(&config);
   ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->IsAvailable());
@@ -60,7 +60,7 @@ TEST(ZKCLIENT, IS_AVALIABLE) {
 
 TEST(ZKCLIENT, GET_CHILDREN_OF_PATH) {
   using namespace xcs::cczk;
-  ZookeeperConfig config("localhost:2181", 3000, "/test");
+  ZookeeperConfig config("xcszookeepertest.n.xiaonei.com:2181", 3000, "/xcs-test");
   ZkClient *tmp = ZkClient::Open(&config);
   ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->IsAvailable());
@@ -94,7 +94,7 @@ TEST(ZKCLIENT, GET_CHILDREN_OF_PATH) {
 
 TEST(ZKCLIENT, SET_DATA_OF_NODE) {
   using namespace xcs::cczk;
-  ZookeeperConfig config("localhost:2181", 3000, "/test");
+  ZookeeperConfig config("xcszookeepertest.n.xiaonei.com:2181", 3000, "/xcs-test");
   ZkClient *tmp = ZkClient::Open(&config);
   ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->IsAvailable());
@@ -121,7 +121,7 @@ TEST(ZKCLIENT, SET_DATA_OF_NODE) {
 
 TEST(ZKCLIENT, GET_DATA_OF_NODE) {
   using namespace xcs::cczk;
-  ZookeeperConfig config("localhost:2181", 3000, "/test");
+  ZookeeperConfig config("xcszookeepertest.n.xiaonei.com:2181", 3000, "/xcs-test");
   ZkClient *tmp = ZkClient::Open(&config);
   ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->IsAvailable());
@@ -136,7 +136,7 @@ TEST(ZKCLIENT, GET_DATA_OF_NODE) {
 
 TEST(ZKCLIENT, CREATE_NODE) {
   using namespace xcs::cczk;
-  ZookeeperConfig config("localhost:2181", 3000, "/test");
+  ZookeeperConfig config("xcszookeepertest.n.xiaonei.com:2181", 3000, "/xcs-test");
   ZkClient *tmp = ZkClient::Open(&config);
   ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->IsAvailable());
@@ -151,7 +151,7 @@ TEST(ZKCLIENT, CREATE_NODE) {
   
   ret = tmp->CreateNode("/seq_test/ephemeral_node", null_str, CreateMode::Ephemeral);
   ASSERT_EQ(ret, ReturnCode::Ok);
-  ret = tmp->CreateNode("/seq_test/ephemeral_node/test", null_str, CreateMode::Persistent);
+  ret = tmp->CreateNode("/seq_test/ephemeral_node/xcs-test", null_str, CreateMode::Persistent);
   ASSERT_EQ(ret, ReturnCode::NoChildrenForEphemerals);
   
   ret = tmp->Exist("/seq_test/ephemeral_node");
@@ -162,13 +162,13 @@ TEST(ZKCLIENT, CREATE_NODE) {
   ret = tmp->Exist("/seq_test/ephemeral_node");
   ASSERT_EQ(ret, ReturnCode::NoNode);
   string data = "thisistest";
-  ret = tmp->CreateNode("/seq_test/test", data, CreateMode::Persistent);
+  ret = tmp->CreateNode("/seq_test/xcs-test", data, CreateMode::Persistent);
   ASSERT_EQ(ret, ReturnCode::Ok);
   string data2;
-  ret = tmp->GetDataOfNode("/seq_test/test", data2);
+  ret = tmp->GetDataOfNode("/seq_test/xcs-test", data2);
   ASSERT_EQ(ret, ReturnCode::Ok);
   ASSERT_EQ(data, data2);
-  ret = tmp->DeleteNode("/seq_test/test");
+  ret = tmp->DeleteNode("/seq_test/xcs-test");
   ASSERT_EQ(ret, ReturnCode::Ok);
   ret = tmp->DeleteNode("/seq_test");
   ASSERT_EQ(ret, ReturnCode::Ok);
@@ -179,7 +179,7 @@ TEST(ZKCLIENT, CREATE_NODE) {
 
 TEST(ZKCLIENT, DELETE_NODE) {
   using namespace xcs::cczk;
-  ZookeeperConfig config("localhost:2181", 3000, "/test");
+  ZookeeperConfig config("xcszookeepertest.n.xiaonei.com:2181", 3000, "/xcs-test");
   ZkClient *tmp = ZkClient::Open(&config);
   ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->IsAvailable());
@@ -189,7 +189,7 @@ TEST(ZKCLIENT, DELETE_NODE) {
 
 TEST(ZKCLIENT, EXIST) {
   using namespace xcs::cczk;
-  ZookeeperConfig config("localhost:2181", 3000, "/test");
+  ZookeeperConfig config("xcszookeepertest.n.xiaonei.com:2181", 3000, "/xcs-test");
   ZkClient *tmp = ZkClient::Open(&config);
   ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->IsAvailable());
@@ -234,7 +234,7 @@ public:
 
 TEST(ZKCLIENT, ADD_LISTENER) {
   using namespace xcs::cczk;
-  ZookeeperConfig config("localhost:2181", 3000, "/test");
+  ZookeeperConfig config("xcszookeepertest.n.xiaonei.com:2181", 3000, "/xcs-test");
   ZkClient *tmp = ZkClient::Open(&config);
   ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->IsAvailable());
@@ -271,7 +271,7 @@ TEST(ZKCLIENT, ADD_LISTENER) {
 
 TEST(ZKCLIENT, DROP_LISTENER) {
   using namespace xcs::cczk;
-  ZookeeperConfig config("localhost:2181", 3000, "/test");
+  ZookeeperConfig config("xcszookeepertest.n.xiaonei.com:2181", 3000, "/xcs-test");
   ZkClient *tmp = ZkClient::Open(&config);
   ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->IsAvailable());
@@ -319,7 +319,7 @@ TEST(ZKCLIENT, DROP_LISTENER) {
 
 TEST(ZKCLIENT, DROP_LISTENER_WITH_PATH) {
   using namespace xcs::cczk;
-  ZookeeperConfig config("localhost:2181", 3000, "/test");
+  ZookeeperConfig config("xcszookeepertest.n.xiaonei.com:2181", 3000, "/xcs-test");
   ZkClient *tmp = ZkClient::Open(&config);
   ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->IsAvailable());
