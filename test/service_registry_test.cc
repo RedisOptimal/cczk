@@ -26,27 +26,27 @@ TEST(SERVICE_REGISTRY, SERVICE_REGISTRY) {
   rc = registry->PublishService(serviceid, version, stat, node1);
   ASSERT_TRUE(rc == -2);
   
-  cczk::zookeeper_config config;
+  cczk::ZookeeperConfig config;
   config.set_host("localhost:2181");
   config.set_root("/test");
   config.set_session_timeout(4000);
-  cczk::zkclient *tmp = cczk::zkclient::open(&config);
+  cczk::ZkClient *tmp = cczk::ZkClient::Open(&config);
   
   rc = registry->PublishService(serviceid, version, stat, node1);
   ASSERT_TRUE(rc == 0);
   //waiting register
   sleep(5);
   std::string path = "/" + serviceid + "/" + version + "/" + stat + "/" + node1.name_;
-  tmp->delete_node(path);
+  tmp->DeleteNode(path);
   //waiting watcher register back
   sleep(20);
   ReturnCode::type ret;
-  ret = tmp->exist(path);
+  ret = tmp->Exist(path);
   ASSERT_TRUE(ret == ReturnCode::Ok);
   
   delete registry;
   sleep(5);
-  ret = tmp->exist(path);
+  ret = tmp->Exist(path);
   ASSERT_TRUE(ret != ReturnCode::Ok);
 }
 

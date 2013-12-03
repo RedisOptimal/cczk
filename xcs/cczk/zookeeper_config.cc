@@ -1,8 +1,9 @@
 /**
  * Copyright 2013 Renren.com
  */
-#include <ZookeeperConfig.h>
+#include <zookeeper_config.h>
 
+#include <stdlib.h>
 #include <string.h>
 
 #include <logging.h>
@@ -102,7 +103,7 @@ void ZookeeperConfig::LoadFromFile(const string file_path) {
 }
 
 string ZookeeperConfig::get_host() {
-  return host;
+  return host_;
 }
 
 void ZookeeperConfig::set_host(const string host) {
@@ -110,7 +111,7 @@ void ZookeeperConfig::set_host(const string host) {
 }
 
 int ZookeeperConfig::get_session_timeout() {
-  return session_timeout;
+  return session_timeout_;
 }
 
 void ZookeeperConfig::set_session_timeout(const int session_timeout) {
@@ -118,13 +119,13 @@ void ZookeeperConfig::set_session_timeout(const int session_timeout) {
 }
 
 string ZookeeperConfig::get_root() {
-  return root;
+  return root_;
 }
 
 void ZookeeperConfig::set_root(const string root) {
   this->root_ = root;
-  if (this->root.find_first_of("/") == 0) {
-    this->root_ = this->root.substr(1);
+  if (this->root_.find_first_of("/") == 0) {
+    this->root_ = this->root_.substr(1);
   }
 }
 

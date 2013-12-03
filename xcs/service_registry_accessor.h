@@ -43,7 +43,7 @@ class ServiceRegistryAccessor {
    *                 
    * return    0为成功
    */ 
-  int ListAndListen(std::vector<std::string>& children, boost::shared_ptr<watcher> listener);
+  int ListAndListen(std::vector<std::string>& children, boost::shared_ptr<Watcher> listener);
 
   /**
    * 给stat下面的所有子节点的 内容变化 加监听
@@ -51,7 +51,7 @@ class ServiceRegistryAccessor {
    * @param listener 监听类，不能为空（NULL)
    * return  0为成功
    */ 
-  int ContentListen(boost::shared_ptr<watcher> listener);
+  int ContentListen(boost::shared_ptr<Watcher> listener);
 
   /**
    * 获取某一个服务状态
@@ -83,7 +83,7 @@ class ServiceRegistryAccessor {
   std::string stat_;
 
   std::string service_path_;
-  std::set<boost::shared_ptr<watcher> > listener_set_;
+  std::set<boost::shared_ptr<Watcher> > listener_set_;
 };
 
 }

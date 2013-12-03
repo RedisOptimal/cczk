@@ -49,14 +49,14 @@ class ZookeeperConfig {
   void add_auth(pair<string, string>);
   void remove_auth(string);
 
-  bool operator !=(const zookeeper_config &conf) const {
+  bool operator !=(const ZookeeperConfig &conf) const {
     return !(*this == conf);
   }
 
-  bool operator ==(const zookeeper_config &conf) const {
-    return (host == conf.host) && \
-    (session_timeout == conf.session_timeout) && \
-    (root == conf.root);
+  bool operator ==(const ZookeeperConfig &conf) const {
+    return (host_ == conf.host_) && \
+    (session_timeout_ == conf.session_timeout_) && \
+    (root_ == conf.root_);
   }
 };
 

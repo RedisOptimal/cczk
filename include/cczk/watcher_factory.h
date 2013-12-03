@@ -23,10 +23,10 @@ namespace xcs {
 namespace cczk {
 class WatcherFactory {
  public  :
-  static boost::shared_ptr<watcher> get_watcher(const watcher::Listener &listener,
+  static boost::shared_ptr<Watcher> get_watcher(const Watcher::Listener &listener,
                                                 bool watch_data,
                                                 bool watch_child) {
-    boost::shared_ptr<watcher> instance(new watcher(listener,
+    boost::shared_ptr<Watcher> instance(new Watcher(listener,
                                                     watch_data,
                                                     watch_child));
     return instance;

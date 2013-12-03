@@ -15,7 +15,7 @@ ServiceRegistryAccessor::ServiceRegistryAccessor(const std::string& serivceId,
 }
 
 ServiceRegistryAccessor::~ServiceRegistryAccessor() {
-  std::set<boost::shared_ptr<watcher> >::iterator set_it = listener_set_.begin();
+  std::set<boost::shared_ptr<Watcher> >::iterator set_it = listener_set_.begin();
   ZkClient *instance = ZkClient::Open();
   for (; set_it != listener_set_.end(); ++set_it) {
     instance->DropListener(*set_it);
@@ -24,7 +24,7 @@ ServiceRegistryAccessor::~ServiceRegistryAccessor() {
 
 int
 ServiceRegistryAccessor::ListAndListen(std::vector<std::string>& children,
-                                       boost::shared_ptr<watcher> listener) {
+                                       boost::shared_ptr<Watcher> listener) {
   ZkClient *instance = ZkClient::Open();
   if (listener != NULL) {
     listener_set_.insert(listener);
@@ -42,7 +42,7 @@ ServiceRegistryAccessor::ListAndListen(std::vector<std::string>& children,
 }
 
 int
-ServiceRegistryAccessor::ContentListen(boost::shared_ptr<watcher> listener) {
+ServiceRegistryAccessor::ContentListen(boost::shared_ptr<Watcher> listener) {
   if (listener == NULL) {
     XCS_ERROR << "Null listener error!\n";
     return -1;

@@ -41,7 +41,7 @@ class Watcher : noncopyable {
   }
 
   bool IsLive() {
-    return watch_data() || watch_child();
+    return IsWatchData() || IsWatchChild();
   }
 
   Listener GetListener() {

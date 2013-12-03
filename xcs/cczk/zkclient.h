@@ -39,7 +39,7 @@ namespace cczk {
     //  <watch_data, watch_child>
     typedef std::pair<bool, bool> PreprotyOfPath;
     //  watcher
-    typedef boost::shared_ptr<watcher> ListenerMapKey;
+    typedef boost::shared_ptr<Watcher> ListenerMapKey;
     //  <path, preproty>
     typedef std::map<string, PreprotyOfPath> ListenerMapValue;
     typedef std::map<ListenerMapKey, ListenerMapValue> ListenerMap;
@@ -73,7 +73,7 @@ namespace cczk {
 
     ~ZkClient();
 
-    void TriggerAllWatcher(const ListenerMap &);
+    void TriggerAllWatcher(ListenerMap &);
    public  :
     static ZkClient* Open(const ZookeeperConfig *config = NULL);
 
@@ -100,12 +100,12 @@ namespace cczk {
 
     ReturnCode::type Exist(const string/*path*/);
 
-    ReturnCode::type AddListener(boost::shared_ptr<watcher>/*listener*/,
+    ReturnCode::type AddListener(boost::shared_ptr<Watcher>/*listener*/,
                                   string/*path*/);
 
-    ReturnCode::type DropListener(boost::shared_ptr<watcher>/*listener*/);
+    ReturnCode::type DropListener(boost::shared_ptr<Watcher>/*listener*/);
 
-    ReturnCode::type DropListenerWithPath(boost::shared_ptr<watcher>/*listener*/,
+    ReturnCode::type DropListenerWithPath(boost::shared_ptr<Watcher>/*listener*/,
                                              string/*path*/);
   };
 

@@ -67,7 +67,7 @@ class ServiceRegistry {
   std::map<std::string, std::pair<bool, std::string> > nodes_;
   boost::mutex mutex_;
 
-  boost::shared_ptr<watcher> listener_;
+  boost::shared_ptr<Watcher> listener_;
 
 };
 

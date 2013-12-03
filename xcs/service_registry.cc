@@ -11,8 +11,8 @@ DEFINE_int32(xcs_holder_time, 300,
              "Default publisher holder time to check ephemeral node time");
 
 ServiceRegistry::ServiceRegistry() {
-  watcher::Listener tmp_listener = boost::bind(&ServiceRegistry::ContentChangeListener, this, _1, _2);
-  listener_ = watcher_factory::get_watcher(tmp_listener, true, false);
+  Watcher::Listener tmp_listener = boost::bind(&ServiceRegistry::ContentChangeListener, this, _1, _2);
+  listener_ = WatcherFactory::get_watcher(tmp_listener, true, false);
 }
 
 ServiceRegistry::~ServiceRegistry() {
