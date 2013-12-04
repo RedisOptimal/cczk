@@ -1,7 +1,8 @@
+#include "xcs/service_registry.h"
+#include "xcs/cczk/zookeeper_config.h"
+#include "xcs/cczk/zkclient.h"
+
 #include <gtest/gtest.h>
-#include <service_registry.h>
-#include <cczk/zookeeper_config.h>
-#include <cczk/zkclient.h>
 
 TEST(SERVICE_REGISTRY, SERVICE_NODE) {
   xcs::ServiceNode node1;

@@ -21,9 +21,9 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <zookeeper_config.h>
-#include <zookeeper_const.h>
-#include <watcher.h>
+#include "zookeeper_config.h"
+#include "zookeeper_const.h"
+#include "watcher.h"
 
 #include <map>
 #include <set>

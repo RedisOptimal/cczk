@@ -1,4 +1,4 @@
-#include <zookeeper_config.h>
+#include "xcs/cczk/zookeeper_config.h"
 #include <gtest/gtest.h>
 #include <fstream>
 

@@ -1,9 +1,10 @@
-#include <zkclient.h>
-#include <fstream>
-#include <zookeeper_config.h>
-#include <watcher_factory.h>
+#include "xcs/cczk/zkclient.h"
+#include "xcs/cczk/zookeeper_config.h"
+#include "xcs/cczk/watcher_factory.h"
+
 #include <gtest/gtest.h>
 
+#include <fstream>
 
 TEST(ZKCLIENT, OPEN) {
   using namespace xcs::cczk;

@@ -14,6 +14,13 @@ ServiceRegistryAccessor::ServiceRegistryAccessor(const std::string& serivceId,
   service_path_ = "/" + service_ + "/" + version_ + "/" + stat_;
 }
 
+ServiceRegistryAccessor::ServiceRegistryAccessor(const string& prefix) :
+    prefix_(prefix)
+{
+  service_path_ = "/" + prefix_;
+}
+
+
 ServiceRegistryAccessor::~ServiceRegistryAccessor() {
   std::set<boost::shared_ptr<Watcher> >::iterator set_it = listener_set_.begin();
   ZkClient *instance = ZkClient::Open();

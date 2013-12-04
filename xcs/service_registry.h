@@ -50,6 +50,21 @@ class ServiceRegistry {
                      const std::string& stat,
                      const ServiceNode& node,
                      bool is_tmp = true);
+/**
+  * 发布服务操作。注意前三项是由OP角色建立的路径，不会在程序中建立
+  * 
+  * @param prefix  发布的服务的前缀，必须已经存在
+  * @param node    发布的服务地址及其服务状态（value值）
+  * @param is_tmp  标示发布的服务是临时的还是永久的，默认是临时的
+  * return         0: 成功
+  *               -1: 失败，严重问题，参数不全,ZK链接问题
+  *               -2: 失败，注册失败，需要重新注册
+  *               -3: 注册节点成功，临时节点的watcher注册失败
+  */  
+  int PublishService(const std::string& prefix,
+                     const ServiceNode& node,
+                     bool is_tmp = true);
+  
  private:
   /**
    * 节点内容变动的监听

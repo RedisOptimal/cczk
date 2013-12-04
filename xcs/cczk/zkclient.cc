@@ -1,9 +1,8 @@
-#include <zkclient.h>
+#include "xcs/cczk/zkclient.h"
+#include "xcs/cczk/watcher.h"
+#include "xcs/logging.h"
 
 #include <boost/shared_ptr.hpp>
-
-#include <watcher.h>
-#include <logging.h>
 
 namespace xcs {
 namespace cczk {

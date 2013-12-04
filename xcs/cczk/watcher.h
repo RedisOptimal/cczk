@@ -17,7 +17,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/concept_check.hpp>
 
-#include <zookeeper_const.h>
+#include "zookeeper_const.h"
 
 #include <string>
 

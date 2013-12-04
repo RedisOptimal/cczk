@@ -12,7 +12,7 @@
 #ifndef XCS_SERVICE_REGISTRY_ACCESSOR_H_
 #define XCS_SERVICE_REGISTRY_ACCESSOR_H_
 
-#include "zkclient.h"
+#include "xcs/cczk/zkclient.h"
 
 #include <vector>
 #include <string>
@@ -32,7 +32,9 @@ class ServiceRegistryAccessor {
   explicit ServiceRegistryAccessor(const std::string& serivceId,
                                    const std::string& version = "1",
                                    const std::string& stat = "0");
-
+  
+  explicit ServiceRegistryAccessor(const std::string& prefix);
+  
   ~ServiceRegistryAccessor();
   
   /**
@@ -81,7 +83,9 @@ class ServiceRegistryAccessor {
   std::string service_;
   std::string version_;
   std::string stat_;
-
+  
+  std::string prefix_;
+  
   std::string service_path_;
   std::set<boost::shared_ptr<Watcher> > listener_set_;
 };

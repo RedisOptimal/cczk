@@ -1,7 +1,6 @@
-#include "logging.h"
-#include "service_registry.h"
-
-#include <cczk/watcher_factory.h>
+#include "xcs/logging.h"
+#include "xcs/service_registry.h"
+#include "xcs/cczk/watcher_factory.h"
 
 namespace xcs {
 
@@ -49,6 +48,52 @@ int ServiceRegistry::PublishService(const string& service,
   ReturnCode::type zoo_rc = instance->CreateNode(path,
                                                   node.content_,
                                                   is_tmp ? CreateMode::Ephemeral : CreateMode::Persistent);
+  if (zoo_rc != ReturnCode::Ok) {
+    return -2;
+  }
+
+  if (is_tmp) {                         
+    {
+      boost::mutex::scoped_lock lock(mutex_);
+      nodes_[path] = std::make_pair(is_tmp, node.content_);
+    }
+    // Idle for 100ms to make sure the node is created
+    usleep(100000);
+    
+    zoo_rc = instance->AddListener(listener_, path);
+    if (zoo_rc != ReturnCode::Ok) {
+      XCS_ERROR << "[PublishService]" << ReturnCode::toString(zoo_rc) << "@PATH=" << path;
+      return -3;
+    }
+  }
+
+  return 0;
+}
+
+
+int ServiceRegistry::PublishService(const string& prefix,
+                                    const ServiceNode& node,
+                                    bool is_tmp) {
+  if (prefix.empty() || node.name_.empty()) {
+    XCS_ERROR << "ServiceRegistry::PublishService() error: [Path prefix : "
+              << prefix <<  "; node:" << node.name_ << "]\n";
+    return -1;
+  }
+  ZkClient *instance = ZkClient::Open();
+  
+  xcs::ReturnCode::type ret;
+  ret = instance->Exist(prefix);
+  if (ret != xcs::ReturnCode::Ok) {
+    XCS_ERROR << "ServiceRegistry::PublishService() error: [prefix = "
+    << prefix << " not exist on zk, take care of `ZookeeperConfig.root_`]";
+    return -1;
+  }
+  
+  string path = "/" + prefix + "/" + node.name_;
+
+  ReturnCode::type zoo_rc = instance->CreateNode(path,
+                                                 node.content_,
+                                                 is_tmp ? CreateMode::Ephemeral : CreateMode::Persistent);
   if (zoo_rc != ReturnCode::Ok) {
     return -2;
   }

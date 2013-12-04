@@ -1,10 +1,9 @@
-#include "zookeeper_const.h"
-#include "logging.h"
+#include "xcs/cczk/zookeeper_const.h"
+#include "xcs/logging.h"
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/format.hpp>
 #include <algorithm>
-#include <iostream>
 
 namespace xcs {
 namespace cczk {

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <gtest/gtest.h>
-#include <logging.h>
+#include <xcs/logging.h>
 
 int main(int argc, char **argv) {
   using namespace xcs;
