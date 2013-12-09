@@ -91,6 +91,11 @@ namespace cczk {
 
     ReturnCode::type GetDataOfNode(const string/*path*/,
                                       string&/*value*/);
+    
+    ReturnCode::type GetDataWithStat(const string/*path*/,
+                                     string&/*value*/,
+                                     Stat&/*stat*/);
+    
 
     ReturnCode::type CreateNode(const string/*path*/,
                                  const string&/*value*/,
@@ -99,7 +104,7 @@ namespace cczk {
     ReturnCode::type DeleteNode(const string/*path*/);
 
     ReturnCode::type Exist(const string/*path*/);
-
+    
     ReturnCode::type AddListener(boost::shared_ptr<Watcher>/*listener*/,
                                   string/*path*/);
 

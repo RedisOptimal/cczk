@@ -20,6 +20,7 @@ ZkClient::ZkClient():
   srand(getpid());
   Clear();
 }
+
 void ZkClient::UpdateAuth() {
   if (zhandle_ != NULL) {
     const string scheme = "digest";
@@ -40,6 +41,7 @@ void ZkClient::UpdateAuth() {
     }
   }
 }
+
 zhandle_t* ZkClient::CreateConnection() {
   if (zhandle_ != NULL) {
     zookeeper_close(zhandle_);
@@ -75,6 +77,7 @@ zhandle_t* ZkClient::CreateConnection() {
   }
   return zhandle_;
 }
+
 void ZkClient::WatcherLoop() {
   while (background_watcher_) {
     sleep(FLAGS_refresh_timeval);
@@ -85,6 +88,7 @@ void ZkClient::WatcherLoop() {
     }
   }
 }
+
 void ZkClient::Clear() {
   boost::recursive_mutex::scoped_lock lock(background_mutex_);
   ListenerMap::iterator it;
@@ -92,12 +96,14 @@ void ZkClient::Clear() {
     it->first->Close();
   }
 }
+
 ZkClient::~ZkClient() {
   background_watcher_ = false;
   background_watcher_thread_.join();
   zookeeper_close(zhandle_);
   zhandle_ = NULL;
 }
+
 void ZkClient::TriggerAllWatcher(ListenerMap& listeners_) {
   ListenerMap::iterator it;
   for (it = listeners_.begin(); it != listeners_.end(); ++it) {
@@ -124,6 +130,7 @@ void ZkClient::TriggerAllWatcher(ListenerMap& listeners_) {
     }
   }
 }
+
 bool ZkClient::IsAvailable()  {
   boost::mutex::scoped_lock lock(this->singleton_mutex_);
   if (zhandle_ != NULL &&
@@ -132,6 +139,7 @@ bool ZkClient::IsAvailable()  {
   }
   return false;
 }
+
 void ZkClient::Close() {
   boost::mutex::scoped_lock lock(this->singleton_mutex_);
   boost::recursive_mutex::scoped_lock lock2(this->background_mutex_);
@@ -140,6 +148,7 @@ void ZkClient::Close() {
     zhandle_ = NULL;
   }
 }
+
 void ZkClient::init_watcher(zhandle_t* zh, int type,
       int state, const char* path, void* watcherCtx) {
   ZkClient *instance = static_cast<ZkClient*>(watcherCtx);
@@ -160,6 +169,7 @@ void ZkClient::init_watcher(zhandle_t* zh, int type,
     }
   }
 }
+
 void ZkClient::event_watcher(zhandle_t* zh, int type,
       int state, const char* path, void* watcherCtx) {
   boost::shared_ptr<Watcher> *point =
@@ -217,6 +227,7 @@ void ZkClient::event_watcher(zhandle_t* zh, int type,
     point->get()->GetListener()(temp_path, temp_state);
   }
 }
+
 ZkClient* ZkClient::Open(const ZookeeperConfig *config)  {
   static ZkClient instance;
   boost::mutex::scoped_lock lock(instance.singleton_mutex_);
@@ -243,6 +254,7 @@ ZkClient* ZkClient::Open(const ZookeeperConfig *config)  {
   }
   return NULL;
 }
+
 ReturnCode::type ZkClient::GetChildrenOfPath(const string path,
                                              std::vector< string >& children) {
   if (!this->IsAvailable()) {
@@ -270,6 +282,7 @@ ReturnCode::type ZkClient::GetChildrenOfPath(const string path,
   deallocate_String_vector(&string_vector);
   return return_code;
 }
+
 ReturnCode::type ZkClient::SetDataOfNode(const string path, string& value) {
   if (!this->IsAvailable()) {
     return ReturnCode::Error;
@@ -292,6 +305,7 @@ ReturnCode::type ZkClient::SetDataOfNode(const string path, string& value) {
   }
   return return_code;
 }
+
 ReturnCode::type ZkClient::GetDataOfNode(const string path, string& value) {
   if (!this->IsAvailable()) {
     return ReturnCode::Error;
@@ -319,6 +333,34 @@ ReturnCode::type ZkClient::GetDataOfNode(const string path, string& value) {
   }
   return return_code;
 }
+
+ReturnCode::type ZkClient::GetDataWithStat(const string path, string& value, Stat &stat) {
+  if (!this->IsAvailable()) {
+    return ReturnCode::Error;
+  }
+  ReturnCode::type return_code;
+  if ((return_code = Exist(path)) != ReturnCode::Ok) {
+    XCS_ERROR << "[GET DATA With Stat]RETCODE=" <<
+    ReturnCode::toString(return_code) << "@PATH=" << path;
+    return return_code;
+  }
+  int length = FLAGS_xcs_zk_node_max_length;
+  boost::scoped_array<char> buffer(new char[FLAGS_xcs_zk_node_max_length]);
+  int rc = zoo_get(zhandle_,
+                   path.c_str(),
+                   0,
+                   buffer.get(),
+                   &length,
+                   &stat);
+  if (rc != ZOK || length == -1) {
+    value.clear();
+    return_code = static_cast<ReturnCode::type>(rc);
+  } else {
+    value.assign(buffer.get(), stat.dataLength);
+  }
+  return return_code;
+}
+
 ReturnCode::type ZkClient::Exist(const string path) {
   if (!this->IsAvailable()) {
     return ReturnCode::Error;
@@ -330,6 +372,7 @@ ReturnCode::type ZkClient::Exist(const string path) {
   }
   return ReturnCode::Ok;
 }
+
 ReturnCode::type ZkClient::CreateNode(const string path,
                                       const string& data,
                                       CreateMode::type mode) {
@@ -377,6 +420,7 @@ ReturnCode::type ZkClient::DeleteNode(const string path) {
   }
   return ReturnCode::Ok;
 }
+
 ReturnCode::type ZkClient::AddListener(boost::shared_ptr< Watcher > listener,
                                        string path) {
   if (!this->IsAvailable()) {
@@ -434,6 +478,7 @@ ReturnCode::type ZkClient::AddListener(boost::shared_ptr< Watcher > listener,
   }
   return return_code;
 }
+
 ReturnCode::type ZkClient::DropListenerWithPath(boost::shared_ptr< Watcher > listener, string path) {
   if (!this->IsAvailable()) {
     return ReturnCode::Error;
@@ -452,6 +497,7 @@ ReturnCode::type ZkClient::DropListenerWithPath(boost::shared_ptr< Watcher > lis
   //  never go here
   return ReturnCode::Error;
 }
+
 ReturnCode::type ZkClient::DropListener(boost::shared_ptr< Watcher > listener) {
   if (!this->IsAvailable()) {
     return ReturnCode::Error;

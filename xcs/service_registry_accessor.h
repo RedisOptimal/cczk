@@ -64,6 +64,16 @@ class ServiceRegistryAccessor {
    */
   int GetServiceStatus(const std::string& endpoint, std::string& content);
 
+  /**
+   * 获取某一个服务状态
+   *
+   * @param endpoint 服务地址(ip:port)，不能为空("")
+   * @param[out] content 输出参数，存储服务状态信息
+   * @param[out] stat 输出参数，返回节点Stat信息
+   * return  0为成功
+   */
+  int GetServiceStatusWithStat(const std::string& endpoint, std::string& content, Stat& stat);
+
   // 获取 service
   std::string service() {
     return service_;
