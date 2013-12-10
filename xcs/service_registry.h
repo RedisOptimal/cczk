@@ -50,6 +50,7 @@ class ServiceRegistry {
                      const std::string& stat,
                      const ServiceNode& node,
                      bool is_tmp = true);
+  
  private:
   /**
    * 节点内容变动的监听

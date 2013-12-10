@@ -21,9 +21,9 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include <zookeeper_config.h>
-#include <zookeeper_const.h>
-#include <watcher.h>
+#include "zookeeper_config.h"
+#include "zookeeper_const.h"
+#include "watcher.h"
 
 #include <map>
 #include <set>
@@ -91,6 +91,11 @@ namespace cczk {
 
     ReturnCode::type GetDataOfNode(const string/*path*/,
                                       string&/*value*/);
+    
+    ReturnCode::type GetDataWithStat(const string/*path*/,
+                                     string&/*value*/,
+                                     Stat&/*stat*/);
+    
 
     ReturnCode::type CreateNode(const string/*path*/,
                                  const string&/*value*/,
@@ -99,7 +104,7 @@ namespace cczk {
     ReturnCode::type DeleteNode(const string/*path*/);
 
     ReturnCode::type Exist(const string/*path*/);
-
+    
     ReturnCode::type AddListener(boost::shared_ptr<Watcher>/*listener*/,
                                   string/*path*/);
 

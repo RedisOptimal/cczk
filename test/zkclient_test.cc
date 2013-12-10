@@ -1,9 +1,10 @@
-#include <zkclient.h>
-#include <fstream>
-#include <zookeeper_config.h>
-#include <watcher_factory.h>
+#include "xcs/cczk/zkclient.h"
+#include "xcs/cczk/zookeeper_config.h"
+#include "xcs/cczk/watcher_factory.h"
+
 #include <gtest/gtest.h>
 
+#include <fstream>
 
 TEST(ZKCLIENT, OPEN) {
   using namespace xcs::cczk;
@@ -194,6 +195,14 @@ TEST(ZKCLIENT, EXIST) {
   ASSERT_TRUE(tmp != NULL);
   ASSERT_TRUE(tmp->IsAvailable());
   
+  ReturnCode::type ret;
+  string null_str = "";
+  ret = tmp->CreateNode("/abc", null_str, CreateMode::Ephemeral);
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  ret = tmp->Exist("/abc");
+  ASSERT_EQ(ret, ReturnCode::Ok);
+  ret = tmp->Exist("/test/abc");
+  ASSERT_EQ(ret, ReturnCode::NoNode);
 }
 
 class Stupid {
@@ -266,6 +275,7 @@ TEST(ZKCLIENT, ADD_LISTENER) {
   ASSERT_EQ(ret, ReturnCode::Ok);
   sleep(2);
   tmp->Close();
+  tmp->Clear();
 }
 
 
@@ -313,7 +323,7 @@ TEST(ZKCLIENT, DROP_LISTENER) {
   ASSERT_EQ(ret, ReturnCode::Ok);
   sleep(2);
   tmp->Close();  
-  
+  tmp->Clear();
 }
 
 
@@ -350,5 +360,5 @@ TEST(ZKCLIENT, DROP_LISTENER_WITH_PATH) {
   ASSERT_EQ(ret, ReturnCode::Ok);
   sleep(2);
   tmp->Close();  
-  
+  tmp->Clear(); 
 }

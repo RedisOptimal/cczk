@@ -74,7 +74,18 @@ ServiceRegistryAccessor::GetServiceStatus(const std::string &endpoint,
       ReturnCode::Ok) {
     return -1;
   }
+  return 0;
+}
 
+int
+ServiceRegistryAccessor::GetServiceStatusWithStat(const std::string &endpoint,
+                                                  std::string& content,
+                                                  Stat& stat) {
+  std::string endpoint_path = service_path_ + "/" + endpoint;
+  if (ZkClient::Open()->GetDataWithStat(endpoint_path, content, stat) !=
+      ReturnCode::Ok) {
+    return -1;
+  }
   return 0;
 }
 

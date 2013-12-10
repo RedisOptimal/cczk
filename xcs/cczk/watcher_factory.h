@@ -11,12 +11,11 @@
  */
 #ifndef INCLUDE_CCZK_WATCHER_FACTORY_H_
 #define INCLUDE_CCZK_WATCHER_FACTORY_H_
+#include "xcs/cczk/watcher.h"
+#include "xcs/cczk/zkclient.h"
+
 #include <boost/concept_check.hpp>
 #include <boost/shared_ptr.hpp>
-
-#include <watcher.h>
-#include <zkclient.h>
-
 #include <map>
 
 namespace xcs {

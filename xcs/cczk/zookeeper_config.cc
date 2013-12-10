@@ -1,12 +1,12 @@
 /**
  * Copyright 2013 Renren.com
  */
-#include <zookeeper_config.h>
+#include "xcs/cczk/zookeeper_config.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-#include <logging.h>
+#include "xcs/logging.h"
 
 #include <fstream>
 #include <map>

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(cczk)
+project(xcs-cczk)
 
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE "DEBUG")
@@ -20,14 +20,23 @@ SET(CXX_FLAGS
  -Wno-reorder
  -Wno-unused-parameter
  -Wno-unused-function
- -rdynamic
  -fPIC
  -D_FILE_OFFSET_BITS=64
  -DHAVE_STDINT_H
  -DHAVE_NETINET_IN_H
  -D__STDC_LIMIT_MACROS
- -fpermissive
  )
+
+# 平台相关设定
+IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  # Mac OS 使用clang，获取更好的错误提示信息；不使用 clang 的运行库，避免程序行为的不一致
+  LIST(APPEND CXX_FLAGS "-stdlib=libstdc++")
+  SET(CMAKE_CXX_COMPILER "clang++")
+ELSEIF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  # Linux 打开全量符号表
+  LIST(APPEND CXX_FLAGS "-rdynamic -fpermissive")
+  SET(CMAKE_CXX_COMPILER "g++")
+ENDIF()
 
 IF(CMAKE_BUILD_BITS EQUAL 32)
   LIST(APPEND CXX_FLAGS "-m32")
@@ -35,14 +44,11 @@ ENDIF()
 
 STRING(REPLACE ";" " " CMAKE_CXX_FLAGS "${CXX_FLAGS}")
 
-SET(CMAKE_CXX_COMPILER "g++")
 SET(CMAKE_CXX_FLAGS_DEBUG "-O0 -fprofile-arcs -ftest-coverage -DDEBUG")
 SET(CMAKE_CXX_FLAGS_RELEASE "-O2 -finline-limit=1000 -DNDEBUG")
 
-INCLUDE_DIRECTORIES(include/)
-INCLUDE_DIRECTORIES(include/cczk/)
-INCLUDE_DIRECTORIES(xcs/)
-INCLUDE_DIRECTORIES(xcs/cczk/)
+# Must use google code style to address the include files
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR})
 
 # Boost
 FIND_PACKAGE(Boost REQUIRED)
@@ -138,3 +144,15 @@ IF (${CMAKE_BUILD_TYPE} MATCHES "DEBUG")
 #    ${GLOG_LIRBARY} ${GFLAGS_LIBRARY} ${GTEST_LIBRARY} pthread cczk_static boost_thread boost_system)
 #  ENDFOREACH (test)
 ENDIF (${CMAKE_BUILD_TYPE} MATCHES "DEBUG")
+
+# install related
+FILE(GLOB XCS_HEAD_LIST "${PROJECT_SOURCE_DIR}/xcs/*.h")
+MESSAGE("xcs header : ${XCS_HEAD_LIST}")
+INSTALL(FILES ${XCS_HEAD_LIST} DESTINATION include/xcs)
+
+FILE(GLOB CCZK_HEAD_LIST "${PROJECT_SOURCE_DIR}/xcs/cczk/*.h")
+MESSAGE("cczk header : ${CCZK_HEAD_LIST}")
+INSTALL(FILES ${CCZK_HEAD_LIST} DESTINATION include/xcs/cczk)
+
+INSTALL(TARGETS xcs_dynamic cczk_dynamic LIBRARY DESTINATION lib/)
+INSTALL(TARGETS xcs_static cczk_static ARCHIVE DESTINATION lib/)

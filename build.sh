@@ -13,7 +13,7 @@ echo "###############"
 
 BASE_ENV=~/env
 
-cmake -DCMAKE_BUILD_TYPE=DEBUG -DCMAKE_PREFIX_PATH=$BASE_ENV ..
+cmake -DCMAKE_BUILD_TYPE=DEBUG -DCMAKE_PREFIX_PATH=$BASE_ENV -DCMAKE_INSTALL_PREFIX=$BASE_ENV ..
 make
 #ctest -D Experimental
 #ctest -D ExperimentalMemCheck

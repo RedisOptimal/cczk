@@ -1,5 +1,7 @@
+#include <iostream>
+#include <fstream>
 #include <gtest/gtest.h>
-#include <logging.h>
+#include <xcs/logging.h>
 
 int main(int argc, char **argv) {
   using namespace xcs;
@@ -9,5 +11,6 @@ int main(int argc, char **argv) {
   xcs::set_xcs_glog_file(argv[0]);
   
   return RUN_ALL_TESTS();
+
 };
 
